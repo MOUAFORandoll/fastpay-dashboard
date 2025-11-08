@@ -16,6 +16,7 @@ interface AnalyticsState {
   fetchGraphData: () => Promise<void>;
   fetchTopBeneficiaries: () => Promise<void>;
   clearError: () => void;
+  reset: () => void;
 }
 
 export const useAnalyticsStore = create<AnalyticsState>((set) => ({
@@ -70,6 +71,16 @@ export const useAnalyticsStore = create<AnalyticsState>((set) => ({
 
   clearError: () => {
     set({ error: null });
+  },
+
+  reset: () => {
+    set({
+      overview: null,
+      graphData: null,
+      topBeneficiaries: null,
+      isLoading: false,
+      error: null,
+    });
   },
 }));
 

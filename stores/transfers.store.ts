@@ -28,6 +28,7 @@ interface TransfersState {
   initializeTransfer: (data: CreateTransfertDto) => Promise<void>;
   setSelectedTransfer: (transfer: Transfer | null) => void;
   clearError: () => void;
+  reset: () => void;
 }
 
 export const useTransfersStore = create<TransfersState>((set, get) => ({
@@ -107,6 +108,20 @@ export const useTransfersStore = create<TransfersState>((set, get) => ({
 
   clearError: () => {
     set({ error: null });
+  },
+
+  reset: () => {
+    set({
+      transfers: [],
+      selectedTransfer: null,
+      isLoading: false,
+      error: null,
+      pagination: {
+        page: 1,
+        size: 10,
+        total: 0,
+      },
+    });
   },
 }));
 

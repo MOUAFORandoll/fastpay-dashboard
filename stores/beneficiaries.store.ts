@@ -44,6 +44,7 @@ interface BeneficiariesState {
   deleteBeneficiary: (id: string) => Promise<void>;
   setSelectedBeneficiary: (beneficiary: Beneficiary | null) => void;
   clearError: () => void;
+  reset: () => void;
 }
 
 export const useBeneficiariesStore = create<BeneficiariesState>(
@@ -209,6 +210,20 @@ export const useBeneficiariesStore = create<BeneficiariesState>(
 
     clearError: () => {
       set({ error: null });
+    },
+
+    reset: () => {
+      set({
+        beneficiaries: [],
+        selectedBeneficiary: null,
+        isLoading: false,
+        error: null,
+        pagination: {
+          page: 1,
+          size: 10,
+          total: 0,
+        },
+      });
     },
   })
 );

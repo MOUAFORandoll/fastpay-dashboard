@@ -49,6 +49,7 @@ interface PaymentsState {
   failTransaction: (id: string) => Promise<void>;
   setSelectedPayment: (payment: Payment | null) => void;
   clearError: () => void;
+  reset: () => void;
 }
 
 export const usePaymentsStore = create<PaymentsState>((set, get) => ({
@@ -290,6 +291,21 @@ export const usePaymentsStore = create<PaymentsState>((set, get) => ({
 
   clearError: () => {
     set({ error: null });
+  },
+
+  reset: () => {
+    set({
+      payments: [],
+      selectedPayment: null,
+      isLoading: false,
+      error: null,
+      filters: null,
+      pagination: {
+        page: 1,
+        size: 10,
+        total: 0,
+      },
+    });
   },
 }));
 

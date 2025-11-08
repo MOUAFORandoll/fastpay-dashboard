@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useOrganisationsStore } from "@/stores/organisations.store";
+import { resetOrganizationStores } from "@/stores";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -121,16 +122,25 @@ export const OrganizationSwitcher = ({
 
     setIsSwitching(true);
     try {
+      // Reset all organization-specific stores to clear old context
+      resetOrganizationStores();
+      
       // Simulate a small delay for better UX
       await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Set the new organization ID
       setCurrentOrganisationId(switchingOrgId);
+      
       toast.success("Organization switched successfully");
       setIsSwitchDialogOpen(false);
       setSwitchingOrgId(null);
+      
+      // Reload the app to fully reinitialize with new organization context
+      // This ensures all components re-fetch data for the new organization
+      window.location.reload();
     } catch (error) {
       toast.error("Failed to switch organization");
       console.error("Failed to switch organization:", error);
-    } finally {
       setIsSwitching(false);
     }
   };
