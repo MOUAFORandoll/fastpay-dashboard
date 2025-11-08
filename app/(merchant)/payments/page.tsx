@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { usePaymentsStore } from "@/stores/payments.store";
 import { PaymentsTable } from "@/components/shared/payments-table";
 import { Button } from "@/components/ui/button";
@@ -111,11 +111,19 @@ export default function PaymentsPage() {
               <div className="text-muted-foreground">Loading payments...</div>
             </div>
           ) : (
-            <PaymentsTable
-              data={payments}
-              onDelete={handleDelete}
-              isLoading={isLoading}
-            />
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-muted-foreground">Loading table...</div>
+                </div>
+              }
+            >
+              <PaymentsTable
+                data={payments}
+                onDelete={handleDelete}
+                isLoading={isLoading}
+              />
+            </Suspense>
           )}
         </CardContent>
       </Card>

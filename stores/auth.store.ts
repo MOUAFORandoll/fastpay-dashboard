@@ -30,6 +30,7 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isHydrated: boolean;
   error: string | null;
   login: (data: LoginRequestDto) => Promise<void>;
   register: (data: {
@@ -42,6 +43,7 @@ interface AuthState {
   clearError: () => void;
   getRole: () => UserRole | null;
   getRoleRoute: () => string;
+  setHydrated: (hydrated: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -51,6 +53,7 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isAuthenticated: false,
       isLoading: false,
+      isHydrated: false,
       error: null,
 
       login: async (data: LoginRequestDto) => {
@@ -134,6 +137,17 @@ export const useAuthStore = create<AuthState>()(
         if (!role) return "/";
         return getRoleRoute(role);
       },
+
+      setHydrated: (hydrated: boolean) => {
+        set({ isHydrated: hydrated });
+        // When hydrated, restore token to API config if available
+        if (hydrated && typeof window !== "undefined") {
+          const state = get();
+          if (state.token) {
+            setAuthToken(state.token);
+          }
+        }
+      },
     }),
     {
       name: "auth-storage",
@@ -142,6 +156,16 @@ export const useAuthStore = create<AuthState>()(
         token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Mark as hydrated after rehydration
+        if (state) {
+          state.setHydrated(true);
+          // Restore token to API config
+          if (state.token && typeof window !== "undefined") {
+            setAuthToken(state.token);
+          }
+        }
+      },
     }
   )
 );

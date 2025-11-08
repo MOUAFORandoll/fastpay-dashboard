@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore, type UserRole } from "@/stores/auth.store";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
@@ -15,47 +13,23 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const { user } = useAuthStore();
+  const { user, isHydrated } = useAuthStore();
   const role = user?.role as UserRole | undefined;
 
-  useEffect(() => {
-    // If no user, redirect to login
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
-    // Role-based route protection
-    if (pathname?.startsWith("/admin")) {
-      if (role !== "ADMIN") {
-        router.push("/");
-        return;
-      }
-    } else if (pathname?.startsWith("/merchant")) {
-      if (role !== "MERCHANT") {
-        router.push("/");
-        return;
-      }
-    } else if (pathname?.startsWith("/dashboard")) {
-      if (role !== "CLIENT") {
-        router.push("/");
-        return;
-      }
-    }
-  }, [user, role, pathname, router]);
-  
-  // Check if user has access to current route
-  const hasAccess = 
-    (pathname?.startsWith("/admin") && role === "ADMIN") ||
-    (pathname?.startsWith("/merchant") && role === "MERCHANT") ||
-    (pathname?.startsWith("/dashboard") && role === "CLIENT");
-
-  // Show nothing while checking or if no access (but allow home page)
-  if (!hasAccess && pathname !== "/" && pathname) {
-    return null;
+  // Show loading state while hydrating
+  if (!isHydrated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
   }
+
+  // AuthProvider handles routing, so if we reach here, user is authenticated
+  // and has access to the current route
 
   return (
     <SidebarProvider

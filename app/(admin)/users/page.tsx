@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { usersController } from "@/controllers/users.controller";
 import { UsersTable } from "@/components/shared/users-table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,11 +58,19 @@ export default function AdminUsersPage() {
               <div className="text-muted-foreground">Loading users...</div>
             </div>
           ) : (
-            <UsersTable
-              data={users}
-              onDelete={handleDelete}
-              isLoading={isLoading}
-            />
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-muted-foreground">Loading table...</div>
+                </div>
+              }
+            >
+              <UsersTable
+                data={users}
+                onDelete={handleDelete}
+                isLoading={isLoading}
+              />
+            </Suspense>
           )}
         </CardContent>
       </Card>

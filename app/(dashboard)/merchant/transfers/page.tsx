@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useTransfersStore } from "@/stores/transfers.store";
 import { TransfersTable } from "@/components/shared/transfers-table";
 import { Button } from "@/components/ui/button";
@@ -105,7 +105,15 @@ export default function TransfersPage() {
               <div className="text-muted-foreground">Loading transfers...</div>
             </div>
           ) : (
-            <TransfersTable data={Array.isArray(transfers) ? transfers : []} isLoading={isLoading} />
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-muted-foreground">Loading table...</div>
+                </div>
+              }
+            >
+              <TransfersTable data={Array.isArray(transfers) ? transfers : []} isLoading={isLoading} />
+            </Suspense>
           )}
         </CardContent>
       </Card>
