@@ -56,15 +56,13 @@ export default function ManagePaymentLinksPage() {
     },
   });
 
-  const { isAuthenticated, isHydrated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
-    // Only fetch data when user is authenticated and store is hydrated
-    if (isHydrated && isAuthenticated) {
+    if (isAuthenticated) {
       fetchPayments({ page: 1, size: 10 });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHydrated, isAuthenticated]);
+  }, [isAuthenticated, fetchPayments]);
 
   const handleDeleteClick = (id: string, reference?: string) => {
     setPaymentToDelete({ id, reference });

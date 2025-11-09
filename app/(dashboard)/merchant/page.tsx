@@ -33,15 +33,13 @@ const formatNumber = (num: number): string => {
 
 export default function MerchantPage() {
   const { overview, isLoading, fetchOverview } = useAnalyticsStore();
-  const { isAuthenticated, isHydrated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
-    // Only fetch data when user is authenticated and store is hydrated
-    if (isHydrated && isAuthenticated) {
+    if (isAuthenticated) {
       fetchOverview();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHydrated, isAuthenticated]);
+  }, [isAuthenticated, fetchOverview]);
 
   const analyticsCards = [
     {

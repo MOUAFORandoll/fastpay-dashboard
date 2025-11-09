@@ -194,22 +194,9 @@ const ThemeSwitcher = () => {
 }
 
 export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
-  const router = useRouter()
-  const { user, getRole, isAuthenticated, isHydrated } = useAuthStore()
+  const { user, getRole } = useAuthStore()
   const role = getRole() || "CLIENT"
   const navigation = getNavigationForRole(role)
-
-  // Note: AuthProvider already handles authentication and routing
-  // This component should not redirect as it causes conflicts
-  // Only check after hydration to avoid unnecessary redirects
-  useEffect(() => {
-    // Wait for hydration before making routing decisions
-    if (!isHydrated) {
-      return;
-    }
-    // AuthProvider handles redirects, so we don't need to do it here
-    // This prevents infinite redirect loops
-  }, [isHydrated, isAuthenticated, user, router])
 
   const userData = user
     ? {

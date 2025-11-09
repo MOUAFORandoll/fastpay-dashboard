@@ -13,15 +13,7 @@ import type { UserDto } from "@/types/api";
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { isAuthenticated, isHydrated } = useAuthStore();
-
-  useEffect(() => {
-    // Only fetch data when user is authenticated and store is hydrated
-    if (isHydrated && isAuthenticated) {
-      fetchUsers();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHydrated, isAuthenticated]);
+  const { isAuthenticated } = useAuthStore();
 
   const fetchUsers = async () => {
     setIsLoading(true);
@@ -38,6 +30,13 @@ export default function AdminUsersPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUsers();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this user?")) {

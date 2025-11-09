@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore, type UserRole, getRoleRoute } from "@/stores/auth.store";
-import { PageLoader } from "@/components/ui/page-loader";
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -17,12 +16,13 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isAuthenticated, isHydrated } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const role = user?.role as UserRole | undefined;
+  const hasRedirected = useRef(false);
 
   useEffect(() => {
-    // Wait for store to hydrate from localStorage before making routing decisions
-    if (!isHydrated) {
+    // Prevent multiple redirects
+    if (hasRedirected.current) {
       return;
     }
 
@@ -33,6 +33,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // If user is not authenticated and trying to access protected route
     if (!isAuthenticated || !user) {
       if (!isPublicRoute) {
+        hasRedirected.current = true;
         router.push("/login");
       }
       return;
@@ -40,6 +41,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     // If user is authenticated and on a public route, redirect to their dashboard
     if (isAuthenticated && user && isPublicRoute) {
+      hasRedirected.current = true;
       const route = getRoleRoute(role || "CLIENT");
       router.push(route);
       return;
@@ -48,33 +50,27 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Role-based route protection
     if (pathname?.startsWith("/admin")) {
       if (role !== "ADMIN") {
-        // Redirect to user's appropriate dashboard
+        hasRedirected.current = true;
         const route = getRoleRoute(role || "CLIENT");
         router.push(route);
         return;
       }
     } else if (pathname?.startsWith("/merchant")) {
       if (role !== "MERCHANT") {
-        // Redirect to user's appropriate dashboard
+        hasRedirected.current = true;
         const route = getRoleRoute(role || "CLIENT");
         router.push(route);
         return;
       }
     } else if (pathname?.startsWith("/dashboard")) {
       if (role !== "CLIENT") {
-        // Redirect to user's appropriate dashboard
+        hasRedirected.current = true;
         const route = getRoleRoute(role || "CLIENT");
         router.push(route);
         return;
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHydrated, isAuthenticated, pathname]);
-
-  // Show loading state while hydrating
-  if (!isHydrated) {
-    return <PageLoader text="Loading..." />;
-  }
+  }, [isAuthenticated, pathname, role, router, user]);
 
   return <>{children}</>;
 };

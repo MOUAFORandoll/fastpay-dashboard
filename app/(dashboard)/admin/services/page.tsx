@@ -16,15 +16,13 @@ export default function AdminServicesPage() {
     fetchServices,
     enableOrDisableService,
   } = useMobileServicesStore();
-  const { isAuthenticated, isHydrated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
-    // Only fetch data when user is authenticated and store is hydrated
-    if (isHydrated && isAuthenticated) {
+    if (isAuthenticated) {
       fetchServices();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHydrated, isAuthenticated]);
+  }, [isAuthenticated, fetchServices]);
 
   // Ensure services is always an array
   const servicesList = Array.isArray(services) ? services : [];

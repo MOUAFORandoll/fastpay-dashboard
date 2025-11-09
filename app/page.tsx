@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import Link from "next/link";
@@ -24,27 +24,29 @@ import {
 
 export default function Home() {
   const router = useRouter();
-  const { user, isAuthenticated, isHydrated } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const hasRedirected = useRef(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    // Wait for store to hydrate before making routing decisions
-    if (!isHydrated) {
+    // Prevent multiple redirects
+    if (hasRedirected.current) {
       return;
     }
     
     // If user is authenticated, redirect to their dashboard
     if (isAuthenticated && user) {
+      hasRedirected.current = true;
       const { getRoleRoute } = useAuthStore.getState();
       const route = getRoleRoute();
       router.push(route);
     }
-  }, [isHydrated, isAuthenticated, user, router]);
+  }, [isAuthenticated, user, router]);
 
   const toggleTheme = () => {
     if (!mounted) return;

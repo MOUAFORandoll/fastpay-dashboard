@@ -54,7 +54,7 @@ interface DirectPaymentFormData {
 export default function PaymentsPage() {
   const { payments, isLoading, pagination, fetchPayments, deletePayment, createDirectPayment } = usePaymentsStore();
   const { services, fetchServices } = useMobileServicesStore();
-  const { isAuthenticated, isHydrated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const [isDirectPaymentOpen, setIsDirectPaymentOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -72,13 +72,11 @@ export default function PaymentsPage() {
   });
 
   useEffect(() => {
-    // Only fetch data when user is authenticated and store is hydrated
-    if (isHydrated && isAuthenticated) {
+    if (isAuthenticated) {
       fetchPayments({ page: 1, size: 10 });
       fetchServices();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHydrated, isAuthenticated]);
+  }, [isAuthenticated, fetchPayments, fetchServices]);
 
   const handleDeleteClick = (id: string, reference?: string) => {
     setPaymentToDelete({ id, reference });

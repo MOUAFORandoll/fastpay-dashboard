@@ -12,15 +12,13 @@ import Link from "next/link";
 
 export default function TransfersPage() {
   const { transfers, isLoading, fetchTransfers } = useTransfersStore();
-  const { isAuthenticated, isHydrated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
-    // Only fetch data when user is authenticated and store is hydrated
-    if (isHydrated && isAuthenticated) {
+    if (isAuthenticated) {
       fetchTransfers();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHydrated, isAuthenticated]);
+  }, [isAuthenticated, fetchTransfers]);
 
   return (
     <div className="flex flex-col gap-6 p-6">
