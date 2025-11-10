@@ -16,7 +16,7 @@ export const paymentsController = {
       ...data,
       organisation_id: data.organisation_id || organisationId || undefined,
     };
-    return apiPost("/api/paiements/new-paiement", payload);
+    return apiPost("/paiements/new-paiement", payload);
   },
 
   createDirectPayment: async (
@@ -27,7 +27,7 @@ export const paymentsController = {
       ...data,
       organisation_id: data.organisation_id || organisationId || undefined,
     };
-    return apiPost("/api/paiements/initialize-direct-paiement", payload);
+    return apiPost("/paiements/initialize-direct-paiement", payload);
   },
 
   getAllPayments: async (params?: {
@@ -46,7 +46,7 @@ export const paymentsController = {
     
     // Only pass organisation_id, page, and size (per_page)
     // Do not include date fields or filter fields by default
-    return apiGet("/api/paiements", queryParams);
+    return apiGet("/paiements", queryParams);
   },
 
   filterPayments: async (
@@ -74,26 +74,26 @@ export const paymentsController = {
           }, {} as Record<string, string>)
         ).toString()}`
       : "";
-    return apiPost(`/api/paiements/filter${queryParams}`, data);
+    return apiPost(`/paiements/filter${queryParams}`, data);
   },
 
   getPaymentByRef: async (reference: string): Promise<unknown> => {
-    return apiGet(`/api/paiements/by-ref/${reference}`);
+    return apiGet(`/paiements/by-ref/${reference}`);
   },
 
   getPaymentById: async (id: string): Promise<unknown> => {
-    return apiGet(`/api/paiements/${id}`);
+    return apiGet(`/paiements/${id}`);
   },
 
   deletePayment: async (id: string): Promise<{ message: string }> => {
-    return apiDelete(`/api/paiements/${id}`);
+    return apiDelete(`/paiements/${id}`);
   },
 
   startExecution: async (
     id: string
   ): Promise<TransactionStatusResponseDto> => {
     return apiPatch<TransactionStatusResponseDto>(
-      `/api/paiements/${id}/start-execution`
+      `/paiements/${id}/start-execution`
     );
   },
 
@@ -101,14 +101,14 @@ export const paymentsController = {
     id: string
   ): Promise<TransactionStatusResponseDto> => {
     return apiPatch<TransactionStatusResponseDto>(
-      `/api/paiements/${id}/complete`
+      `/paiements/${id}/complete`
     );
   },
 
   failTransaction: async (
     id: string
   ): Promise<TransactionStatusResponseDto> => {
-    return apiPatch<TransactionStatusResponseDto>(`/api/paiements/${id}/fail`);
+    return apiPatch<TransactionStatusResponseDto>(`/paiements/${id}/fail`);
   },
 };
 

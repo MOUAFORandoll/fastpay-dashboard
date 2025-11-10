@@ -22,7 +22,7 @@ export const analyticsController = {
         delete queryParams[key as keyof typeof queryParams]
     );
     return apiGet<AnalyticsOverviewResponseDto>(
-      "/api/analytics/overview",
+      "/analytics/overview",
       Object.keys(queryParams).length > 0 ? queryParams : undefined
     );
   },
@@ -42,7 +42,7 @@ export const analyticsController = {
         delete queryParams[key as keyof typeof queryParams]
     );
     return apiGet<AnalyticsGraphDataResponseDto>(
-      "/api/analytics/graph",
+      "/analytics/graph",
       Object.keys(queryParams).length > 0 ? queryParams : undefined
     );
   },
@@ -62,7 +62,7 @@ export const analyticsController = {
         delete queryParams[key as keyof typeof queryParams]
     );
     return apiGet<AnalyticsTopBeneficiariesResponseDto>(
-      "/api/analytics/top-beneficiaries",
+      "/analytics/top-beneficiaries",
       Object.keys(queryParams).length > 0 ? queryParams : undefined
     );
   },

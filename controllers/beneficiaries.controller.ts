@@ -8,39 +8,39 @@ export const beneficiariesController = {
   createBeneficiary: async (
     data: CreateBeneficiaireDto
   ): Promise<{ message: string }> => {
-    return apiPost("/api/beneficiaires", data);
+    return apiPost("/beneficiaires", data);
   },
 
   getAllBeneficiaries: async (params?: {
     page?: number;
     size?: number;
   }): Promise<unknown> => {
-    return apiGet("/api/beneficiaires", params);
+    return apiGet("/beneficiaires", params);
   },
 
   getMyBeneficiaries: async (params?: {
     page?: number;
     size?: number;
   }): Promise<unknown> => {
-    return apiGet("/api/beneficiaires/me", params);
+    return apiGet("/beneficiaires/me", params);
   },
 
   getBeneficiariesByOrganisation: async (
     organisation: string,
     params?: { page?: number; size?: number }
   ): Promise<unknown> => {
-    return apiGet(`/api/beneficiaires/${organisation}`, params);
+    return apiGet(`/beneficiaires/${organisation}`, params);
   },
 
   updateBeneficiary: async (
     id: string,
     data: UpdateBeneficiaireDto
   ): Promise<{ message: string }> => {
-    return apiPatch(`/api/beneficiaires/${id}`, data);
+    return apiPatch(`/beneficiaires/${id}`, data);
   },
 
   deleteBeneficiary: async (id: string): Promise<{ message: string }> => {
-    return apiDelete(`/api/beneficiaires/${id}`);
+    return apiDelete(`/beneficiaires/${id}`);
   },
 };
 

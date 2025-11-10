@@ -3,27 +3,27 @@ import type { UserDto, LoginResponseDto } from "@/types/api";
 
 export const usersController = {
   getCurrentUser: async (): Promise<UserDto> => {
-    return apiGet<UserDto>("/api/users/me");
+    return apiGet<UserDto>("/users/me");
   },
 
   getUserById: async (id: string): Promise<UserDto> => {
-    return apiGet<UserDto>(`/api/users/${id}`);
+    return apiGet<UserDto>(`/users/${id}`);
   },
 
   deleteUser: async (id: string): Promise<{ message: string }> => {
-    return apiDelete(`/api/users/${id}`);
+    return apiDelete(`/users/${id}`);
   },
 
   sendNotification: async (): Promise<void> => {
-    await apiGet("/api/users/send-notif");
+    await apiGet("/users/send-notif");
   },
 
   updateNotificationToken: async (): Promise<void> => {
-    await apiPatch("/api/users/notification");
+    await apiPatch("/users/notification");
   },
 
   verifyIdentity: async (): Promise<LoginResponseDto> => {
-    return apiPost<LoginResponseDto>("/api/users/verify-identity");
+    return apiPost<LoginResponseDto>("/users/verify-identity");
   },
 };
 

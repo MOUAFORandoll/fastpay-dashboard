@@ -3,19 +3,19 @@ import type { CountryResponseDto } from "@/types/api";
 
 export const countriesController = {
   getAllCountries: async (): Promise<CountryResponseDto[]> => {
-    return apiGet<CountryResponseDto[]>("/api/country");
+    return apiGet<CountryResponseDto[]>("/country");
   },
 
   enableTransactions: async (id: string): Promise<{ message: string }> => {
-    return apiPatch(`/api/country/${id}/enable-transactions`);
+    return apiPatch(`/country/${id}/enable-transactions`);
   },
 
   disableTransactions: async (id: string): Promise<{ message: string }> => {
-    return apiPatch(`/api/country/${id}/disable-transactions`);
+    return apiPatch(`/country/${id}/disable-transactions`);
   },
 
   deleteCountry: async (id: string): Promise<{ message: string }> => {
-    return apiDelete(`/api/country/${id}`);
+    return apiDelete(`/country/${id}`);
   },
 };
 

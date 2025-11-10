@@ -11,7 +11,7 @@ export const transfersController = {
       ...data,
       organisation_id: data.organisation_id || organisationId || undefined,
     };
-    return apiPost("/api/transferts/initialise", payload);
+    return apiPost("/transferts/initialise", payload);
   },
 
   getAllTransfers: async (params?: {
@@ -30,11 +30,11 @@ export const transfersController = {
         queryParams[key as keyof typeof queryParams] === undefined &&
         delete queryParams[key as keyof typeof queryParams]
     );
-    return apiGet("/api/transferts", queryParams);
+    return apiGet("/transferts", queryParams);
   },
 
   getTransferById: async (id: string): Promise<unknown> => {
-    return apiGet(`/api/transferts/${id}`);
+    return apiGet(`/transferts/${id}`);
   },
 };
 

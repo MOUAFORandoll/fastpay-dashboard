@@ -11,44 +11,44 @@ export const organisationsController = {
   createOrganisation: async (
     data: CreateOrganisationDto
   ): Promise<{ message: string }> => {
-    return apiPost("/api/organisations", data);
+    return apiPost("/organisations", data);
   },
 
   getMyOrganisation: async (): Promise<unknown> => {
-    return apiGet("/api/organisations/me");
+    return apiGet("/organisations/me");
   },
 
   generateApiKey: async (
     organisation: string,
     data: GenerateApiKeyOrganisationDto
   ): Promise<unknown> => {
-    return apiPost(`/api/organisations/${organisation}/api-key`, data);
+    return apiPost(`/organisations/${organisation}/api-key`, data);
   },
 
   listApiKeys: async (organisation: string): Promise<unknown> => {
-    return apiGet(`/api/organisations/${organisation}/api-key`);
+    return apiGet(`/organisations/${organisation}/api-key`);
   },
 
   updateOrganisation: async (
     id: string,
     data: UpdateOrganisationDto
   ): Promise<{ message: string }> => {
-    return apiPatch(`/api/organisations/${id}`, data);
+    return apiPatch(`/organisations/${id}`, data);
   },
 
   deleteOrganisation: async (id: string): Promise<{ message: string }> => {
-    return apiDelete(`/api/organisations/${id}`);
+    return apiDelete(`/organisations/${id}`);
   },
 
   createWebhook: async (
     organisation: string,
     data: CreateWebhookDto
   ): Promise<{ message: string }> => {
-    return apiPost(`/api/organisations/${organisation}/webhooks`, data);
+    return apiPost(`/organisations/${organisation}/webhooks`, data);
   },
 
   getWebhooks: async (organisation: string): Promise<unknown> => {
-    return apiGet(`/api/organisations/${organisation}/webhooks`);
+    return apiGet(`/organisations/${organisation}/webhooks`);
   },
 
   updateWebhook: async (
@@ -57,7 +57,7 @@ export const organisationsController = {
     data: UpdateWebhookDto
   ): Promise<{ message: string }> => {
     return apiPatch(
-      `/api/organisations/${organisation}/webhooks/${webhookId}`,
+      `/organisations/${organisation}/webhooks/${webhookId}`,
       data
     );
   },
@@ -67,7 +67,7 @@ export const organisationsController = {
     webhookId: string
   ): Promise<{ message: string }> => {
     return apiDelete(
-      `/api/organisations/${organisation}/webhooks/${webhookId}`
+      `/organisations/${organisation}/webhooks/${webhookId}`
     );
   },
 };
