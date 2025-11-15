@@ -10,7 +10,7 @@ import type {
 export const paymentsController = {
   createPayment: async (
     data: NewCreatePaymentDto
-  ): Promise<{ message: string }> => {
+  ): Promise<unknown> => {
     const organisationId = getCurrentOrganisationId();
     const payload: NewCreatePaymentDto = {
       ...data,

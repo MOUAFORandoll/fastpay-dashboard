@@ -13,37 +13,34 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye } from "lucide-react";
-interface Transfer {
+import { MoreHorizontal, Eye, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+
+interface GroupedPayment {
   id: string;
-  amount: number;
   reference?: string;
-  status?: string;
+  reason?: string;
+  launch_url?: string;
+  currency?: string;
+  when_created?: string;
   createdAt?: string;
-  beneficiary?: {
+  organisation?: {
     id: string;
-    name?: string | null;
-    phone?: string;
-    [key: string]: unknown;
-  };
-  service_mobile?: {
-    id: string;
-    name?: string;
-    country?: string;
-    code_prefix?: string;
-    api_endpoint?: string | null;
-    isActive?: boolean;
+    libelle?: string;
+    description?: string;
     createdAt?: string;
     updatedAt?: string;
+    apiKeys?: unknown[];
     [key: string]: unknown;
   };
   [key: string]: unknown;
 }
 
-interface TransfersTableProps {
-  data: Transfer[];
-  onView?: (transfer: Transfer) => void;
-  onRowClick?: (transfer: Transfer) => void;
+interface GroupedPaymentsTableProps {
+  data: GroupedPayment[];
+  onView?: (id: string) => void;
+  onDelete?: (id: string, reference?: string) => void;
+  onRowClick?: (payment: GroupedPayment) => void;
   isLoading?: boolean;
   pagination?: {
     page: number;
@@ -53,94 +50,61 @@ interface TransfersTableProps {
   onPaginationChange?: (page: number, size: number) => void;
 }
 
-const statusColors: Record<string, string> = {
-  INIT: "bg-gray-100 text-gray-800",
-  PENDING: "bg-yellow-100 text-yellow-800",
-  COMPLETE: "bg-green-100 text-green-800",
-  FAILED: "bg-red-100 text-red-800",
-};
-
-export const TransfersTable = ({
+export const GroupedPaymentsTable = ({
   data,
   onView,
+  onDelete,
   onRowClick,
   isLoading = false,
   pagination,
   onPaginationChange,
-}: TransfersTableProps) => {
-  const columns = useMemo<ColumnDef<Transfer>[]>(
+}: GroupedPaymentsTableProps) => {
+  const router = useRouter();
+
+  const handleRowClickInternal = React.useCallback((payment: GroupedPayment) => {
+    if (onRowClick) {
+      onRowClick(payment);
+    }
+  }, [onRowClick]);
+
+  const handleViewTransactions = React.useCallback((payment: GroupedPayment) => {
+    router.push(`/merchant/payments/grouped/${payment.id}`);
+  }, [router]);
+
+  const columns = useMemo<ColumnDef<GroupedPayment>[]>(
     () => [
       {
-        accessorKey: "reference",
-        header: "Reference",
+        accessorKey: "id",
+        header: "ID",
         cell: ({ row }) => (
           <div className="font-medium font-mono text-sm">
-            {row.original.reference || row.original.id.slice(-8)}
+            {row.original.id.slice(-8)}
           </div>
         ),
       },
       {
-        accessorKey: "beneficiary",
-        header: "Recipient",
+        accessorKey: "reason",
+        header: "Reason",
         cell: ({ row }) => (
-          <div className="font-medium">
-            {row.original.beneficiary?.name || "-"}
+          <div className="max-w-[200px] truncate">
+            {row.original.reason || "-"}
           </div>
         ),
       },
       {
-        accessorKey: "phone",
-        header: "Phone",
+        accessorKey: "organisation",
+        header: "Organisation",
         cell: ({ row }) => (
-          <div>{row.original.beneficiary?.phone || "-"}</div>
+          <div className="max-w-[150px] truncate">
+            {row.original.organisation?.libelle || "-"}
+          </div>
         ),
-      },
-      {
-        accessorKey: "amount",
-        header: "Amount",
-        cell: ({ row }) => {
-          const amount = row.original.amount;
-          return (
-            <div className="font-medium">
-              {typeof amount === "number"
-                ? new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "XOF",
-                  }).format(amount)
-                : amount}
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: "service_mobile",
-        header: "Service",
-        cell: ({ row }) => (
-          <Badge variant="secondary">
-            {row.original.service_mobile?.name || row.original.service_mobile?.code_prefix || "-"}
-          </Badge>
-        ),
-      },
-      {
-        accessorKey: "status",
-        header: "Status",
-        cell: ({ row }) => {
-          const status = row.original.status || "INIT";
-          return (
-            <Badge
-              variant="outline"
-              className={statusColors[status] || statusColors.INIT}
-            >
-              {status}
-            </Badge>
-          );
-        },
       },
       {
         accessorKey: "createdAt",
-        header: "Date",
+        header: "Created",
         cell: ({ row }) => {
-          const date = row.original.createdAt;
+          const date = row.original.createdAt || row.original.when_created;
           if (!date) return "-";
           return new Date(date as string).toLocaleDateString("en-US", {
             year: "numeric",
@@ -164,19 +128,25 @@ export const TransfersTable = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {(onView || onRowClick) && (
-                <DropdownMenuItem 
+              <DropdownMenuItem 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewTransactions(row.original);
+                }}
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                View Transactions
+              </DropdownMenuItem>
+              {onDelete && (
+                <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (onRowClick) {
-                      onRowClick(row.original);
-                    } else if (onView) {
-                      onView(row.original);
-                    }
+                    onDelete(row.original.id, row.original.reference || row.original.id);
                   }}
+                  className="text-red-600"
                 >
-                  <Eye className="mr-2 h-4 w-4" />
-                  View Details
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
@@ -184,7 +154,7 @@ export const TransfersTable = ({
         ),
       },
     ],
-    [onView, onRowClick]
+    [onView, onDelete, handleRowClickInternal, handleViewTransactions]
   );
 
   const pageCount = pagination
@@ -225,21 +195,8 @@ export const TransfersTable = ({
       onPaginationChange(currentPageIndex + 1, currentPageSize);
       prevPaginationRef.current = { pageIndex: currentPageIndex, pageSize: currentPageSize };
     }
-  }, [table.getState().pagination.pageIndex, table.getState().pagination.pageSize, onPaginationChange, pagination]);
+  }, [table.getState().pagination.pageIndex, table.getState().pagination.pageSize]);
 
-  const handleRowClick = (transfer: Transfer) => {
-    if (onRowClick) {
-      onRowClick(transfer);
-    } else if (onView) {
-      onView(transfer);
-    }
-  };
-
-  return (
-    <DataTable
-      table={table}
-      onRowClick={handleRowClick}
-    />
-  );
+  return <DataTable table={table} onRowClick={handleRowClickInternal} />;
 };
 

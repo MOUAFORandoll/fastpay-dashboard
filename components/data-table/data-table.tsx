@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   table: TanstackTable<TData>;
   actionBar?: React.ReactNode;
+  onRowClick?: (row: TData) => void;
 }
 
 export function DataTable<TData>({
@@ -23,6 +24,7 @@ export function DataTable<TData>({
   actionBar,
   children,
   className,
+  onRowClick,
   ...props
 }: DataTableProps<TData>) {
   return (
@@ -64,11 +66,15 @@ export function DataTable<TData>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="animate-slide-up transition-colors duration-150"
+                  className={cn(
+                    "animate-slide-up transition-colors duration-150",
+                    onRowClick && "cursor-pointer hover:bg-muted/50"
+                  )}
                   style={{
                     animationDelay: `${index * 0.02}s`,
                     animationFillMode: "both",
                   }}
+                  onClick={() => onRowClick?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell

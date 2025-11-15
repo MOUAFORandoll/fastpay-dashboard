@@ -34,8 +34,8 @@ export const authController = {
 
   forgotPassword: async (
     data: UserAuthenticationOtpDto
-  ): Promise<LoginResponseDto> => {
-    return apiPost<LoginResponseDto>(
+  ): Promise<{ user_id: string }> => {
+    return apiPost<{ user_id: string }>(
       "/auth/forgot-password/send-otp",
       data
     );

@@ -21,7 +21,7 @@ export const useMobileServicesStore = create<MobileServicesState>(
       set({ isLoading: true, error: null });
       try {
         const services = await mobileServicesController.getAllServices();
-        // Ensure services is always an array
+        // Controller already handles response structure, ensure it's an array
         const servicesArray = Array.isArray(services) ? services : [];
         set({ services: servicesArray, isLoading: false });
       } catch (error) {

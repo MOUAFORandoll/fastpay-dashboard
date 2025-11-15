@@ -44,11 +44,6 @@ import {
 const getNavigationForRole = (role: UserRole | null) => {
   const baseNavSecondary = [
     {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
       title: "Get Help",
       url: "#",
       icon: IconHelp,
@@ -85,7 +80,6 @@ const getNavigationForRole = (role: UserRole | null) => {
             icon: IconSettings,
           },
         ],
-        navSecondary: baseNavSecondary,
       }
     case "MERCHANT":
       return {
@@ -106,9 +100,9 @@ const getNavigationForRole = (role: UserRole | null) => {
             icon: IconTransfer,
           },
           {
-            title: "Quick Links",
-            url: "/merchant/quick",
-            icon: IconBolt,
+            title: "Settings",
+            url: "/merchant/settings",
+            icon: IconSettings,
           },
         ],
         navSecondary: baseNavSecondary,
@@ -233,8 +227,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
             <OrganizationSwitcher align="start" fullWidth />
           </div>
         )}
-        <NavMain items={navigation.navMain} />
-        <NavSecondary items={navigation.navSecondary} className="mt-auto" />
+        <NavMain items={navigation.navMain} role={role} />
       </SidebarContent>
       <SidebarFooter>
         <ThemeSwitcher />

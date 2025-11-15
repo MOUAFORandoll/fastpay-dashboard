@@ -1,1598 +1,1046 @@
 {
-    "openapi": "3.0.0",
-    "paths": {
-      "/api/paiements/new-paiement": {
-        "post": {
-          "operationId": "PaiementsController_newPaiement",
-          "parameters": [],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NewCreatePaymentDto"
-                }
-              }
-            }
-          },
-          "responses": {
-            "201": {
-              "description": "Transaction created successfully"
-            }
-          },
-          "summary": "Create a new paiment link",
-          "tags": [
-            "paiements"
-          ]
-        }
-      },
-      "/api/paiements/initialize-direct-paiement": {
-        "post": {
-          "operationId": "PaiementsController_newDirectPaiement",
-          "parameters": [],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NewCreateDirectPaymentDto"
-                }
-              }
-            }
-          },
-          "responses": {
-            "201": {
-              "description": "Transaction created successfully"
-            }
-          },
-          "summary": "Create a new paiment link",
-          "tags": [
-            "paiements"
-          ]
-        }
-      },
-      "/api/paiements": {
-        "get": {
-          "operationId": "PaiementsController_findAll",
-          "parameters": [
-            {
-              "name": "page",
-              "required": false,
-              "in": "query",
+  "openapi": "3.0.0",
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
               "schema": {
-                "type": "number"
-              }
-            },
-            {
-              "name": "size",
-              "required": false,
-              "in": "query",
-              "schema": {
-                "type": "number"
+                "$ref": "#/components/schemas/LoginRequestDto"
               }
             }
-          ],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FilterDto"
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Paiements retrieved successfully"
-            }
-          },
-          "summary": "Get  paiements",
-          "tags": [
-            "paiements"
-          ]
-        }
-      },
-      "/api/paiements/by-ref/{reference}": {
-        "get": {
-          "operationId": "PaiementsController_findOneByRef",
-          "parameters": [
-            {
-              "name": "reference",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Transaction retrieved successfully"
-            }
-          },
-          "summary": "Get transaction by ID",
-          "tags": [
-            "paiements"
-          ]
-        }
-      },
-      "/api/paiements/{id}": {
-        "get": {
-          "operationId": "PaiementsController_findOne",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Transaction retrieved successfully"
-            }
-          },
-          "summary": "Get transaction by ID",
-          "tags": [
-            "paiements"
-          ]
+          }
         },
-        "delete": {
-          "operationId": "PaiementsController_remove",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Transaction deleted successfully"
-            }
-          },
-          "summary": "Delete transaction",
-          "tags": [
-            "paiements"
-          ]
-        }
-      },
-      "/api/paiements/{id}/start-execution": {
-        "patch": {
-          "operationId": "PaiementsController_startExecution",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Transaction execution started",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/TransactionStatusResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "summary": "Start transaction execution",
-          "tags": [
-            "paiements"
-          ]
-        }
-      },
-      "/api/paiements/{id}/complete": {
-        "patch": {
-          "operationId": "PaiementsController_completeTransaction",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Transaction completed successfully",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/TransactionStatusResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "summary": "Complete transaction",
-          "tags": [
-            "paiements"
-          ]
-        }
-      },
-      "/api/paiements/{id}/fail": {
-        "patch": {
-          "operationId": "PaiementsController_failTransaction",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Transaction failed",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/TransactionStatusResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "summary": "Fail transaction",
-          "tags": [
-            "paiements"
-          ]
-        }
-      },
-      "/api/auth/login": {
-        "post": {
-          "operationId": "AuthController_login",
-          "parameters": [],
-          "requestBody": {
-            "required": true,
+        "responses": {
+          "200": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LoginRequestDto"
+                  "$ref": "#/components/schemas/LoginResponseDto"
                 }
               }
             }
           },
-          "responses": {
-            "200": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/LoginResponseDto"
-                  }
-                }
-              }
-            },
-            "5XX": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/IAppErrorDto"
-                  }
-                }
-              }
-            },
-            "4XX": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/IAppErrorDto"
-                  }
-                }
-              }
-            }
-          },
-          "tags": [
-            "Auth"
-          ]
-        }
-      },
-      "/api/auth/logout": {
-        "post": {
-          "operationId": "AuthController_logout",
-          "parameters": [],
-          "responses": {
-            "200": {
-              "description": ""
-            },
-            "5XX": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/IAppErrorDto"
-                  }
-                }
-              }
-            },
-            "4XX": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/IAppErrorDto"
-                  }
-                }
-              }
-            }
-          },
-          "tags": [
-            "Auth"
-          ]
-        }
-      },
-      "/api/auth/register": {
-        "post": {
-          "operationId": "AuthController_register",
-          "parameters": [],
-          "requestBody": {
-            "required": true,
+          "5XX": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateUserDto"
+                  "$ref": "#/components/schemas/IAppErrorDto"
                 }
               }
             }
           },
-          "responses": {
-            "200": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/LoginResponseDto"
-                  }
-                }
-              }
-            },
-            "5XX": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/IAppErrorDto"
-                  }
-                }
-              }
-            },
-            "4XX": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/IAppErrorDto"
-                  }
-                }
-              }
-            }
-          },
-          "summary": "Register a new user",
-          "tags": [
-            "Auth"
-          ]
-        }
-      },
-      "/api/auth/{id}/update": {
-        "post": {
-          "operationId": "AuthController_completeUserProfile",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "requestBody": {
-            "required": true,
+          "4XX": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CompleteUserDto"
+                  "$ref": "#/components/schemas/IAppErrorDto"
                 }
               }
             }
-          },
-          "responses": {
-            "200": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/LoginResponseDto"
-                  }
-                }
-              }
-            },
-            "5XX": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/IAppErrorDto"
-                  }
-                }
-              }
-            },
-            "4XX": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/IAppErrorDto"
-                  }
-                }
-              }
-            }
-          },
-          "summary": "Update a user",
-          "tags": [
-            "Auth"
-          ]
-        }
-      },
-      "/api/auth/forgot-password/send-otp": {
-        "post": {
-          "operationId": "AuthController_forgotPassword",
-          "parameters": [],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserAuthenticationOtpDto"
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/LoginResponseDto"
-                  }
-                }
-              }
-            },
-            "5XX": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/IAppErrorDto"
-                  }
-                }
-              }
-            },
-            "4XX": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/IAppErrorDto"
-                  }
-                }
-              }
-            }
-          },
-          "summary": "Send forgot password OTP",
-          "tags": [
-            "Auth"
-          ]
-        }
-      },
-      "/api/auth/forgot-password/verify-otp": {
-        "post": {
-          "operationId": "AuthController_verifyPassword",
-          "parameters": [],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserVerifyOtpDto"
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": ""
-            },
-            "5XX": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/IAppErrorDto"
-                  }
-                }
-              }
-            },
-            "4XX": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/IAppErrorDto"
-                  }
-                }
-              }
-            }
-          },
-          "summary": "verify password OTP",
-          "tags": [
-            "Auth"
-          ]
-        }
-      },
-      "/api/auth/forgot-password/reset-password/{id}": {
-        "patch": {
-          "operationId": "AuthController_resetPassword",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NewPasswordDto"
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/LoginResponseDto"
-                  }
-                }
-              }
-            },
-            "5XX": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/IAppErrorDto"
-                  }
-                }
-              }
-            },
-            "4XX": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/IAppErrorDto"
-                  }
-                }
-              }
-            }
-          },
-          "summary": "Reset password after OTP verification",
-          "tags": [
-            "Auth"
-          ]
-        }
-      },
-      "/api/users/me": {
-        "get": {
-          "operationId": "UsersController_findOneUser",
-          "parameters": [],
-          "responses": {
-            "200": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/UserDto"
-                  }
-                }
-              }
-            }
-          },
-          "summary": "Retrieves a user by their  token",
-          "tags": [
-            "Users"
-          ]
-        }
-      },
-      "/api/users/{id}": {
-        "get": {
-          "operationId": "UsersController_findOne",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "User retrieved successfully"
-            }
-          },
-          "summary": "Get user by ID",
-          "tags": [
-            "Users"
-          ]
+          }
         },
-        "delete": {
-          "operationId": "UsersController_remove",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "User deleted successfully"
-            }
-          },
-          "summary": "Delete user",
-          "tags": [
-            "Users"
-          ]
-        }
-      },
-      "/api/users/send-notif": {
-        "get": {
-          "operationId": "UsersController_sendNotif",
-          "parameters": [],
-          "responses": {
-            "200": {
-              "description": ""
-            }
-          },
-          "summary": "Retrieves a user by their  token",
-          "tags": [
-            "Users"
-          ]
-        }
-      },
-      "/api/users/notification": {
-        "patch": {
-          "operationId": "UsersController_notificationToken",
-          "parameters": [],
-          "responses": {
-            "200": {
-              "description": ""
-            }
-          },
-          "summary": "Firebase notification token of the user",
-          "tags": [
-            "Users"
-          ]
-        }
-      },
-      "/api/users/verify-identity": {
-        "post": {
-          "operationId": "UsersController_verifyIdentity",
-          "parameters": [],
-          "responses": {
-            "200": {
-              "description": "",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/LoginResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "summary": "Verify user identity (KYC)",
-          "tags": [
-            "Users"
-          ]
-        }
-      },
-      "/api/notifications/events/{ref}": {
-        "get": {
-          "operationId": "NotificationsController_sendEvents",
-          "parameters": [
-            {
-              "name": "ref",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": ""
-            }
-          },
-          "tags": [
-            "Notifications"
-          ]
-        }
-      },
-      "/api/organisations": {
-        "post": {
-          "operationId": "OrganisationsController_create",
-          "parameters": [],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateOrganisationDto"
-                }
-              }
-            }
-          },
-          "responses": {
-            "201": {
-              "description": "Organisation created successfully"
-            }
-          },
-          "summary": "Create a new organisation",
-          "tags": [
-            "organisations"
-          ]
-        }
-      },
-      "/api/organisations/me": {
-        "get": {
-          "operationId": "OrganisationsController_findByUser",
-          "parameters": [],
-          "responses": {
-            "200": {
-              "description": "Organisation retrieved successfully"
-            }
-          },
-          "summary": "Get organisation by ID",
-          "tags": [
-            "organisations"
-          ]
-        }
-      },
-      "/api/organisations/{organisation}/api-key": {
-        "post": {
-          "operationId": "OrganisationsController_generateApiKey",
-          "parameters": [
-            {
-              "name": "organisation",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GenerateApiKeyOrganisationDto"
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Organisation retrieved successfully"
-            }
-          },
-          "summary": "Create organisation api key",
-          "tags": [
-            "organisations"
-          ]
-        },
-        "get": {
-          "operationId": "OrganisationsController_listApiKeys",
-          "parameters": [
-            {
-              "name": "organisation",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Organisation retrieved successfully"
-            }
-          },
-          "summary": "Get organisation api key",
-          "tags": [
-            "organisations"
-          ]
-        }
-      },
-      "/api/organisations/{id}": {
-        "patch": {
-          "operationId": "OrganisationsController_update",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UpdateOrganisationDto"
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Organisation updated successfully"
-            }
-          },
-          "summary": "Update organisation",
-          "tags": [
-            "organisations"
-          ]
-        },
-        "delete": {
-          "operationId": "OrganisationsController_remove",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Organisation deleted successfully"
-            }
-          },
-          "summary": "Delete organisation",
-          "tags": [
-            "organisations"
-          ]
-        }
-      },
-      "/api/organisations/{organisation}/webhooks": {
-        "post": {
-          "operationId": "OrganisationsController_createWebhook",
-          "parameters": [
-            {
-              "name": "organisation",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateWebhookDto"
-                }
-              }
-            }
-          },
-          "responses": {
-            "201": {
-              "description": "Webhook created successfully"
-            }
-          },
-          "summary": "Create a webhook for an organisation",
-          "tags": [
-            "organisations"
-          ]
-        },
-        "get": {
-          "operationId": "OrganisationsController_getWebhooks",
-          "parameters": [
-            {
-              "name": "organisation",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Webhooks retrieved successfully"
-            }
-          },
-          "summary": "Get all webhooks for an organisation",
-          "tags": [
-            "organisations"
-          ]
-        }
-      },
-      "/api/organisations/{organisation}/webhooks/{webhookId}": {
-        "patch": {
-          "operationId": "OrganisationsController_updateWebhook",
-          "parameters": [
-            {
-              "name": "organisation",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            },
-            {
-              "name": "webhookId",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UpdateWebhookDto"
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Webhook updated successfully"
-            }
-          },
-          "summary": "Update a webhook",
-          "tags": [
-            "organisations"
-          ]
-        },
-        "delete": {
-          "operationId": "OrganisationsController_deleteWebhook",
-          "parameters": [
-            {
-              "name": "organisation",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            },
-            {
-              "name": "webhookId",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Webhook deleted successfully"
-            }
-          },
-          "summary": "Delete a webhook",
-          "tags": [
-            "organisations"
-          ]
-        }
-      },
-      "/api/beneficiaires": {
-        "post": {
-          "operationId": "BeneficiairesController_create",
-          "parameters": [],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateBeneficiaireDto"
-                }
-              }
-            }
-          },
-          "responses": {
-            "201": {
-              "description": "Beneficiaire created successfully"
-            }
-          },
-          "summary": "Create a new beneficiaire",
-          "tags": [
-            "beneficiaires"
-          ]
-        },
-        "get": {
-          "operationId": "BeneficiairesController_findAll",
-          "parameters": [
-            {
-              "name": "page",
-              "required": false,
-              "in": "query",
-              "schema": {
-                "type": "number"
-              }
-            },
-            {
-              "name": "size",
-              "required": false,
-              "in": "query",
-              "schema": {
-                "type": "number"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Beneficiaires retrieved successfully"
-            }
-          },
-          "summary": "Get all beneficiaires",
-          "tags": [
-            "beneficiaires"
-          ]
-        }
-      },
-      "/api/beneficiaires/me": {
-        "get": {
-          "operationId": "BeneficiairesController_findByUser",
-          "parameters": [
-            {
-              "name": "page",
-              "required": false,
-              "in": "query",
-              "schema": {
-                "type": "number"
-              }
-            },
-            {
-              "name": "size",
-              "required": false,
-              "in": "query",
-              "schema": {
-                "type": "number"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Beneficiaires retrieved successfully"
-            }
-          },
-          "summary": "Get beneficiaire by user",
-          "tags": [
-            "beneficiaires"
-          ]
-        }
-      },
-      "/api/beneficiaires/{organisation}": {
-        "get": {
-          "operationId": "BeneficiairesController_findByOrganisation",
-          "parameters": [
-            {
-              "name": "organisation",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            },
-            {
-              "name": "page",
-              "required": false,
-              "in": "query",
-              "schema": {
-                "type": "number"
-              }
-            },
-            {
-              "name": "size",
-              "required": false,
-              "in": "query",
-              "schema": {
-                "type": "number"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Beneficiaires retrieved successfully"
-            }
-          },
-          "summary": "Get beneficiaires by organisation",
-          "tags": [
-            "beneficiaires"
-          ]
-        }
-      },
-      "/api/beneficiaires/{id}": {
-        "patch": {
-          "operationId": "BeneficiairesController_update",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UpdateBeneficiaireDto"
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Beneficiaire updated successfully"
-            }
-          },
-          "summary": "Update beneficiaire",
-          "tags": [
-            "beneficiaires"
-          ]
-        },
-        "delete": {
-          "operationId": "BeneficiairesController_remove",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Beneficiaire deleted successfully"
-            }
-          },
-          "summary": "Delete beneficiaire",
-          "tags": [
-            "beneficiaires"
-          ]
-        }
-      },
-      "/api/country": {
-        "get": {
-          "operationId": "CountryController_findAll",
-          "parameters": [],
-          "responses": {
-            "200": {
-              "description": "Countries retrieved successfully",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/CountryResponseDto"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "summary": "Get all countries",
-          "tags": [
-            "country"
-          ]
-        }
-      },
-      "/api/country/{id}/enable-transactions": {
-        "patch": {
-          "operationId": "CountryController_enableTransactions",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Transactions enabled successfully"
-            }
-          },
-          "summary": "Enable transactions for country",
-          "tags": [
-            "country"
-          ]
-        }
-      },
-      "/api/country/{id}/disable-transactions": {
-        "patch": {
-          "operationId": "CountryController_disableTransactions",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Transactions disabled successfully"
-            }
-          },
-          "summary": "Disable transactions for country",
-          "tags": [
-            "country"
-          ]
-        }
-      },
-      "/api/country/{id}": {
-        "delete": {
-          "operationId": "CountryController_remove",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Country deleted successfully"
-            }
-          },
-          "summary": "Delete country",
-          "tags": [
-            "country"
-          ]
-        }
-      },
-      "/api/services-mobile": {
-        "get": {
-          "operationId": "ServicesMobileController_findAll",
-          "parameters": [],
-          "responses": {
-            "200": {
-              "description": "Mobile services retrieved successfully",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/ServiceMobileResponseDto"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "summary": "Get all mobile services",
-          "tags": [
-            "services-mobile"
-          ]
-        }
-      },
-      "/api/services-mobile/enable-or-disable/{id}": {
-        "patch": {
-          "operationId": "ServicesMobileController_enableOrDisable",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Mobile service enabled or disabled successfully"
-            }
-          },
-          "summary": "Enable or disable mobile service",
-          "tags": [
-            "services-mobile"
-          ]
-        }
-      },
-      "/api/analytics/overview": {
-        "get": {
-          "operationId": "AnalyticsController_getOverview",
-          "parameters": [],
-          "responses": {
-            "200": {
-              "description": "Analytics overview retrieved successfully",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/AnalyticsOverviewResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "summary": "Get analytics overview",
-          "tags": [
-            "analytics"
-          ]
-        }
-      },
-      "/api/analytics/graph": {
-        "get": {
-          "operationId": "AnalyticsController_getGraphData",
-          "parameters": [],
-          "responses": {
-            "200": {
-              "description": "Analytics graph data retrieved successfully",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/AnalyticsGraphDataResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "summary": "Get analytics graph data",
-          "tags": [
-            "analytics"
-          ]
-        }
-      },
-      "/api/analytics/top-beneficiaries": {
-        "get": {
-          "operationId": "AnalyticsController_getTopBeneficiaries",
-          "parameters": [],
-          "responses": {
-            "200": {
-              "description": "Top beneficiaries retrieved successfully",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/AnalyticsTopBeneficiariesResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "summary": "Get top beneficiaries",
-          "tags": [
-            "analytics"
-          ]
-        }
-      },
-      "/api/transferts/initialise": {
-        "post": {
-          "operationId": "TransfertsController_newTransfert",
-          "parameters": [],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateTransfertDto"
-                }
-              }
-            }
-          },
-          "responses": {
-            "201": {
-              "description": "Transaction created successfully"
-            }
-          },
-          "summary": "Initialise a mobile transfert",
-          "tags": [
-            "transferts"
-          ]
-        }
-      },
-      "/api/transferts": {
-        "get": {
-          "operationId": "TransfertsController_findAll",
-          "parameters": [
-            {
-              "name": "page",
-              "required": false,
-              "in": "query",
-              "schema": {
-                "type": "number"
-              }
-            },
-            {
-              "name": "size",
-              "required": false,
-              "in": "query",
-              "schema": {
-                "type": "number"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "transferts retrieved successfully"
-            }
-          },
-          "summary": "Get all transferts",
-          "tags": [
-            "transferts"
-          ]
-        }
-      },
-      "/api/transferts/{id}": {
-        "get": {
-          "operationId": "TransfertsController_findOne",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Transfert retrieved successfully"
-            }
-          },
-          "summary": "Get transfert by ID",
-          "tags": [
-            "transferts"
-          ]
-        }
+        "tags": [
+          "Auth"
+        ]
       }
     },
-    "info": {
-      "title": "FastPay",
-      "description": "This documentation provides all endpoint and entities of FastPay API",
-      "version": "1.0",
-      "contact": {
-  
+    "/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IAppErrorDto"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IAppErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
       }
     },
-    "tags": [
-      {
-        "name": "Auth",
-        "description": "Endpoints for authentication and login"
+    "/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IAppErrorDto"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IAppErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Register a new user",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/{id}/update": {
+      "post": {
+        "operationId": "AuthController_completeUserProfile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IAppErrorDto"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IAppErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Update a user",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/forgot-password/send-otp": {
+      "post": {
+        "operationId": "AuthController_forgotPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserAuthenticationOtpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IAppErrorDto"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IAppErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Send forgot password OTP",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/forgot-password/reset-password/{id}": {
+      "patch": {
+        "operationId": "AuthController_resetPassword",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IAppErrorDto"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IAppErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Reset password after OTP verification",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/users/me": {
+      "get": {
+        "operationId": "UsersController_findOneUser",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Retrieves a user by their  token",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "operationId": "UsersController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User retrieved successfully"
+          }
+        },
+        "summary": "Get user by ID",
+        "tags": [
+          "Users"
+        ]
       },
-      {
-        "name": "Users",
-        "description": "Endpoints for managing user accounts"
-      }
-    ],
-    "servers": [
-      {
-        "url": "https://agregateur-rest.onrender.com",
-        "description": "For production environment"
-      }
-    ],
-    "components": {
-      "schemas": {
-        "NewCreatePaymentDto": {
-          "type": "object",
-          "properties": {
-            "amount": {
-              "type": "number"
-            },
-            "description": {
-              "type": "string"
-            },
-            "organisation_id": {
-              "type": "string"
-            },
-            "extra_data": {
-              "type": "object",
-              "description": "Optional JSON object with additional data"
-            }
-          },
-          "required": [
-            "amount",
-            "description"
-          ]
-        },
-        "NewCreateDirectPaymentDto": {
-          "type": "object",
-          "properties": {
-            "amount": {
-              "type": "number"
-            },
-            "description": {
-              "type": "string"
-            },
-            "extra_data": {
-              "type": "object",
-              "description": "Optional JSON object with additional data"
-            },
-            "phone": {
-              "type": "string"
-            },
-            "service_mobile_code": {
-              "type": "string"
-            },
-            "organisation_id": {
+      "delete": {
+        "operationId": "UsersController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
               "type": "string"
             }
-          },
-          "required": [
-            "amount",
-            "description",
-            "phone"
-          ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted successfully"
+          }
         },
-        "FilterDto": {
-          "type": "object",
-          "properties": {
-            "transaction_type": {
+        "summary": "Delete user",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/send-notif": {
+      "get": {
+        "operationId": "UsersController_sendNotif",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Retrieves a user by their  token",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/notification": {
+      "patch": {
+        "operationId": "UsersController_notificationToken",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Firebase notification token of the user",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/verify-identity": {
+      "post": {
+        "operationId": "UsersController_verifyIdentity",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Verify user identity (KYC)",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/notifications/events/{ref}": {
+      "get": {
+        "operationId": "NotificationsController_sendEvents",
+        "parameters": [
+          {
+            "name": "ref",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/organisations": {
+      "post": {
+        "operationId": "OrganisationsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrganisationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Organisation created successfully"
+          }
+        },
+        "summary": "Create a new organisation",
+        "tags": [
+          "organisations"
+        ]
+      }
+    },
+    "/organisations/me": {
+      "get": {
+        "operationId": "OrganisationsController_findByUser",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Organisation retrieved successfully"
+          }
+        },
+        "summary": "Get organisation by ID",
+        "tags": [
+          "organisations"
+        ]
+      }
+    },
+    "/organisations/{id}": {
+      "patch": {
+        "operationId": "OrganisationsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrganisationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Organisation updated successfully"
+          }
+        },
+        "summary": "Update organisation",
+        "tags": [
+          "organisations"
+        ]
+      },
+      "delete": {
+        "operationId": "OrganisationsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organisation deleted successfully"
+          }
+        },
+        "summary": "Delete organisation",
+        "tags": [
+          "organisations"
+        ]
+      }
+    },
+    "/api-keys/{organisation}/generate": {
+      "post": {
+        "operationId": "ApiKeyController_generateApiKey",
+        "parameters": [
+          {
+            "name": "organisation",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateApiKeyOrganisationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Organisation retrieved successfully"
+          }
+        },
+        "summary": "Create organisation api key",
+        "tags": [
+          "api-keys"
+        ]
+      }
+    },
+    "/api-keys/{organisation}/api-key": {
+      "get": {
+        "operationId": "ApiKeyController_listApiKeys",
+        "parameters": [
+          {
+            "name": "organisation",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organisation retrieved successfully"
+          }
+        },
+        "summary": "Get organisation api key",
+        "tags": [
+          "api-keys"
+        ]
+      }
+    },
+    "/api-keys/{api_key_id}/webhooks": {
+      "post": {
+        "operationId": "ApiKeyController_createWebhook",
+        "parameters": [
+          {
+            "name": "api_key_id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Webhook created successfully"
+          }
+        },
+        "summary": "Create a webhook for an api key",
+        "tags": [
+          "api-keys"
+        ]
+      },
+      "get": {
+        "operationId": "ApiKeyController_getWebhooks",
+        "parameters": [
+          {
+            "name": "api_key_id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhooks retrieved successfully"
+          }
+        },
+        "summary": "Get all webhooks for an api key",
+        "tags": [
+          "api-keys"
+        ]
+      }
+    },
+    "/api-keys/{api_key_id}/regenerate": {
+      "get": {
+        "operationId": "ApiKeyController_regenerateApiKeySecret",
+        "parameters": [
+          {
+            "name": "api_key_id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Regeneration successfully"
+          }
+        },
+        "summary": "Regenerate an secret for api key",
+        "tags": [
+          "api-keys"
+        ]
+      }
+    },
+    "/api-keys/{api_key_id}/webhooks/{web_hook_id}": {
+      "patch": {
+        "operationId": "ApiKeyController_updateWebhook",
+        "parameters": [
+          {
+            "name": "api_key_id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "web_hook_id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook updated successfully"
+          }
+        },
+        "summary": "Update a webhook",
+        "tags": [
+          "api-keys"
+        ]
+      },
+      "delete": {
+        "operationId": "ApiKeyController_deleteWebhook",
+        "parameters": [
+          {
+            "name": "api_key_id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "web_hook_id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook deleted successfully"
+          }
+        },
+        "summary": "Delete a webhook",
+        "tags": [
+          "api-keys"
+        ]
+      }
+    },
+    "/api-keys/{api_key_id}": {
+      "delete": {
+        "operationId": "ApiKeyController_deleteApiKey",
+        "parameters": [
+          {
+            "name": "api_key_id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook deleted successfully"
+          }
+        },
+        "summary": "Delete a Api Key",
+        "tags": [
+          "api-keys"
+        ]
+      }
+    },
+    "/beneficiaires": {
+      "post": {
+        "operationId": "BeneficiairesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBeneficiaireDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Beneficiaire created successfully"
+          }
+        },
+        "summary": "Create a new beneficiaire",
+        "tags": [
+          "beneficiaires"
+        ]
+      },
+      "get": {
+        "operationId": "BeneficiairesController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "size",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Beneficiaires retrieved successfully"
+          }
+        },
+        "summary": "Get all beneficiaires",
+        "tags": [
+          "beneficiaires"
+        ]
+      }
+    },
+    "/beneficiaires/me": {
+      "get": {
+        "operationId": "BeneficiairesController_findByUser",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "size",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Beneficiaires retrieved successfully"
+          }
+        },
+        "summary": "Get beneficiaire by user",
+        "tags": [
+          "beneficiaires"
+        ]
+      }
+    },
+    "/beneficiaires/{organisation}": {
+      "get": {
+        "operationId": "BeneficiairesController_findByOrganisation",
+        "parameters": [
+          {
+            "name": "organisation",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "size",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Beneficiaires retrieved successfully"
+          }
+        },
+        "summary": "Get beneficiaires by organisation",
+        "tags": [
+          "beneficiaires"
+        ]
+      }
+    },
+    "/beneficiaires/{id}": {
+      "patch": {
+        "operationId": "BeneficiairesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBeneficiaireDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Beneficiaire updated successfully"
+          }
+        },
+        "summary": "Update beneficiaire",
+        "tags": [
+          "beneficiaires"
+        ]
+      },
+      "delete": {
+        "operationId": "BeneficiairesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Beneficiaire deleted successfully"
+          }
+        },
+        "summary": "Delete beneficiaire",
+        "tags": [
+          "beneficiaires"
+        ]
+      }
+    },
+    "/payments/new-payment": {
+      "post": {
+        "operationId": "PaymentsController_newPayment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewCreatePaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transaction created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewPaymentResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a new paiment link",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/payments/initialize-direct-payment": {
+      "post": {
+        "operationId": "PaymentsController_newDirectPayment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewCreateDirectPaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transaction created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewPaymentResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a new paiment link",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/payments": {
+      "get": {
+        "operationId": "PaymentsController_findAll",
+        "parameters": [
+          {
+            "name": "transaction_type",
+            "required": true,
+            "in": "query",
+            "schema": {
               "type": "string",
               "enum": [
                 "PAYMENT",
@@ -1600,8 +1048,13 @@
                 "TRANSFERT",
                 "RECHARGE"
               ]
-            },
-            "status": {
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
               "type": "string",
               "enum": [
                 "INIT",
@@ -1611,507 +1064,1296 @@
                 "FAILED",
                 "TIMEOUT"
               ]
-            },
-            "dateFrom": {
+            }
+          },
+          {
+            "name": "dateFrom",
+            "required": true,
+            "in": "query",
+            "schema": {
               "type": "number"
-            },
-            "dateTo": {
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": true,
+            "in": "query",
+            "schema": {
               "type": "number"
-            },
-            "organisationId": {
+            }
+          },
+          {
+            "name": "organisation_id",
+            "required": true,
+            "in": "query",
+            "schema": {
               "type": "string"
             }
           },
-          "required": [
-            "transaction_type",
-            "status",
-            "dateFrom",
-            "dateTo"
-          ]
-        },
-        "TransactionStatusResponseDto": {
-          "type": "object",
-          "properties": {
-            "status": {
-              "type": "boolean"
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
             }
           },
-          "required": [
-            "status"
-          ]
+          {
+            "name": "size",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payments retrieved successfully"
+          }
         },
-        "IDisplayText": {
-          "type": "object",
-          "properties": {
-            "lang": {
-              "type": "string"
-            },
-            "value": {
+        "summary": "Get  payments",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/payments/by-ref/{reference}": {
+      "get": {
+        "operationId": "PaymentsController_findOneByRef",
+        "parameters": [
+          {
+            "name": "reference",
+            "required": true,
+            "in": "path",
+            "schema": {
               "type": "string"
             }
-          },
-          "required": [
-            "lang",
-            "value"
-          ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction retrieved successfully"
+          }
         },
-        "IAppError": {
-          "type": "object",
-          "properties": {
-            "code": {
+        "summary": "Get transaction by reference",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/payments/{id}": {
+      "get": {
+        "operationId": "PaymentsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
               "type": "string"
-            },
-            "message": {
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction retrieved successfully"
+          }
+        },
+        "summary": "Get transaction by ID",
+        "tags": [
+          "payments"
+        ]
+      },
+      "delete": {
+        "operationId": "PaymentsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
               "type": "string"
-            },
-            "display_messages": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/IDisplayText"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction deleted successfully"
+          }
+        },
+        "summary": "Delete transaction",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/grouped-payments/new-payment": {
+      "post": {
+        "operationId": "GroupedPaymentsController_newGroupedPayment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewCreateGroupedPaymentDto"
               }
-            },
-            "details": {
-              "type": "object"
-            },
-            "status_code": {
-              "type": "number"
-            },
-            "url": {
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transaction created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewPaymentGroupedResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a new paiment link",
+        "tags": [
+          "grouped-payments"
+        ]
+      }
+    },
+    "/grouped-payments/by-ref/{reference}": {
+      "get": {
+        "operationId": "GroupedPaymentsController_findOneByRef",
+        "parameters": [
+          {
+            "name": "reference",
+            "required": true,
+            "in": "path",
+            "schema": {
               "type": "string"
             }
-          },
-          "required": [
-            "code",
-            "message"
-          ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction retrieved successfully"
+          }
         },
-        "IAppErrorDto": {
-          "type": "object",
-          "properties": {
-            "error": {
-              "$ref": "#/components/schemas/IAppError"
+        "summary": "Get grouped payment by ID",
+        "tags": [
+          "grouped-payments"
+        ]
+      }
+    },
+    "/grouped-payments/payments": {
+      "get": {
+        "operationId": "GroupedPaymentsController_findGroupedPaymentTransactions",
+        "parameters": [
+          {
+            "name": "transaction_type",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PAYMENT",
+                "DIRECT_PAYMENT",
+                "TRANSFERT",
+                "RECHARGE"
+              ]
             }
           },
-          "required": [
-            "error"
-          ]
-        },
-        "LoginRequestDto": {
-          "type": "object",
-          "properties": {
-            "email": {
-              "type": "string"
-            },
-            "password": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "email",
-            "password"
-          ]
-        },
-        "UserDto": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "string"
-            },
-            "fullname": {
-              "type": "string"
-            },
-            "phone": {
-              "type": "string"
-            },
-            "email": {
-              "type": "string"
-            },
-            "country_code": {
-              "type": "string"
-            },
-            "code_phone": {
-              "type": "string"
-            },
-            "status": {
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
               "type": "string",
               "enum": [
                 "INIT",
+                "INEXECUTION",
+                "PENDING",
                 "COMPLETE",
-                "PENDING"
+                "FAILED",
+                "TIMEOUT"
               ]
-            },
-            "firebaseNotificationToken": {
-              "type": "string",
-              "description": "Firebase notification token of the user"
-            },
-            "balance": {
-              "type": "number"
-            },
-            "role": {
-              "type": "string",
-              "enum": [
-                "CLIENT",
-                "MERCHANT",
-                "ADMIN"
-              ]
-            },
-            "kyc_status": {
-              "type": "string"
-            },
-            "name": {
-              "type": "string"
-            },
-            "surname": {
-              "type": "string"
-            },
-            "birth_day": {
+            }
+          },
+          {
+            "name": "dateFrom",
+            "required": true,
+            "in": "query",
+            "schema": {
               "type": "number"
             }
           },
-          "required": [
-            "id",
-            "fullname",
-            "phone",
-            "email",
-            "country_code",
-            "code_phone",
-            "status",
-            "firebaseNotificationToken",
-            "balance",
-            "role",
-            "kyc_status",
-            "name",
-            "surname",
-            "birth_day"
-          ]
-        },
-        "LoginResponseDto": {
-          "type": "object",
-          "properties": {
-            "user": {
-              "$ref": "#/components/schemas/UserDto"
-            },
-            "auth_token": {
-              "type": "string"
-            },
-            "expire_at": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "user",
-            "auth_token",
-            "expire_at"
-          ]
-        },
-        "CreateUserDto": {
-          "type": "object",
-          "properties": {
-            "fullname": {
-              "type": "string"
-            },
-            "email": {
-              "type": "string"
-            },
-            "password": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "fullname",
-            "email",
-            "password"
-          ]
-        },
-        "CompleteUserDto": {
-          "type": "object",
-          "properties": {
-            "phone": {
-              "type": "string"
-            },
-            "code_phone": {
-              "type": "string",
-              "description": "User code_phone"
-            }
-          },
-          "required": [
-            "phone",
-            "code_phone"
-          ]
-        },
-        "UserAuthenticationOtpDto": {
-          "type": "object",
-          "properties": {
-            "email": {
-              "type": "string",
-              "description": "email"
-            }
-          }
-        },
-        "UserVerifyOtpDto": {
-          "type": "object",
-          "properties": {
-            "user_id": {
-              "type": "string"
-            },
-            "otp_code": {
-              "type": "string"
-            }
-          }
-        },
-        "NewPasswordDto": {
-          "type": "object",
-          "properties": {
-            "password": {
-              "type": "string",
-              "description": "Password"
-            },
-            "otp_code": {
-              "type": "string"
-            }
-          }
-        },
-        "CreateOrganisationDto": {
-          "type": "object",
-          "properties": {
-            "libelle": {
-              "type": "string"
-            },
-            "web_site": {
-              "type": "string"
-            },
-            "description": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "libelle",
-            "web_site"
-          ]
-        },
-        "GenerateApiKeyOrganisationDto": {
-          "type": "object",
-          "properties": {
-            "title": {
-              "type": "string"
-            },
-            "description": {
-              "type": "string"
-            }
-          }
-        },
-        "UpdateOrganisationDto": {
-          "type": "object",
-          "properties": {
-            "description": {
-              "type": "string"
-            }
-          }
-        },
-        "CreateWebhookDto": {
-          "type": "object",
-          "properties": {
-            "link": {
-              "type": "string",
-              "description": "The URL of the webhook endpoint"
-            },
-            "title": {
-              "type": "string",
-              "description": "Optional title for the webhook"
-            }
-          },
-          "required": [
-            "link"
-          ]
-        },
-        "UpdateWebhookDto": {
-          "type": "object",
-          "properties": {
-            "link": {
-              "type": "string",
-              "description": "The URL of the webhook endpoint"
-            },
-            "title": {
-              "type": "string",
-              "description": "Optional title for the webhook"
-            }
-          }
-        },
-        "CreateBeneficiaireDto": {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string"
-            },
-            "phone": {
-              "type": "string"
-            },
-            "country_id": {
-              "type": "string"
-            },
-            "code_phone": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "name",
-            "phone",
-            "country_id"
-          ]
-        },
-        "UpdateBeneficiaireDto": {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string"
-            }
-          }
-        },
-        "CountryResponseDto": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "string"
-            },
-            "codeIso2": {
-              "type": "string"
-            },
-            "libelle": {
-              "type": "string"
-            },
-            "transactionsEnabled": {
-              "type": "boolean"
-            },
-            "authEnabled": {
-              "type": "boolean"
-            }
-          },
-          "required": [
-            "id",
-            "codeIso2",
-            "libelle",
-            "transactionsEnabled",
-            "authEnabled"
-          ]
-        },
-        "ServiceMobileResponseDto": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "string"
-            },
-            "name": {
-              "type": "string"
-            },
-            "country": {
-              "type": "string"
-            },
-            "code_prefix": {
-              "type": "string"
-            },
-            "api_endpoint": {
-              "type": "string"
-            },
-            "isActive": {
-              "type": "boolean"
-            },
-            "createdAt": {
-              "format": "date-time",
-              "type": "string"
-            },
-            "updatedAt": {
-              "format": "date-time",
-              "type": "string"
-            }
-          },
-          "required": [
-            "id",
-            "name",
-            "country",
-            "code_prefix",
-            "isActive",
-            "createdAt",
-            "updatedAt"
-          ]
-        },
-        "AnalyticsOverviewResponseDto": {
-          "type": "object",
-          "properties": {
-            "totalTransactions": {
-              "type": "number"
-            },
-            "totalAmount": {
-              "type": "number"
-            },
-            "successfulTransactions": {
-              "type": "number"
-            },
-            "failedTransactions": {
-              "type": "number"
-            },
-            "commissions": {
+          {
+            "name": "dateTo",
+            "required": true,
+            "in": "query",
+            "schema": {
               "type": "number"
             }
           },
-          "required": [
-            "totalTransactions",
-            "totalAmount",
-            "successfulTransactions",
-            "failedTransactions",
-            "commissions"
-          ]
+          {
+            "name": "grouped_payment_id",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "size",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payments retrieved successfully"
+          }
         },
-        "AnalyticsGraphDataResponseDto": {
-          "type": "object",
-          "properties": {
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "object"
+        "summary": "Get  payments",
+        "tags": [
+          "grouped-payments"
+        ]
+      }
+    },
+    "/grouped-payments": {
+      "get": {
+        "operationId": "GroupedPaymentsController_findAll",
+        "parameters": [
+          {
+            "name": "dateFrom",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "organisation_id",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "size",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payments retrieved successfully"
+          }
+        },
+        "summary": "Get Grouped payments",
+        "tags": [
+          "grouped-payments"
+        ]
+      }
+    },
+    "/grouped-payments/{id}": {
+      "delete": {
+        "operationId": "GroupedPaymentsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction deleted successfully"
+          }
+        },
+        "summary": "Delete transaction",
+        "tags": [
+          "grouped-payments"
+        ]
+      }
+    },
+    "/country": {
+      "get": {
+        "operationId": "CountryController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Countries retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CountryResponseDto"
+                  }
+                }
               }
             }
-          },
-          "required": [
-            "data"
-          ]
+          }
         },
-        "AnalyticsTopBeneficiariesResponseDto": {
-          "type": "object",
-          "properties": {
-            "beneficiaries": {
-              "type": "array",
-              "items": {
-                "type": "object"
+        "summary": "Get all countries",
+        "tags": [
+          "country"
+        ]
+      }
+    },
+    "/country/{id}/enable-transactions": {
+      "patch": {
+        "operationId": "CountryController_enableTransactions",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transactions enabled successfully"
+          }
+        },
+        "summary": "Enable transactions for country",
+        "tags": [
+          "country"
+        ]
+      }
+    },
+    "/country/{id}/disable-transactions": {
+      "patch": {
+        "operationId": "CountryController_disableTransactions",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transactions disabled successfully"
+          }
+        },
+        "summary": "Disable transactions for country",
+        "tags": [
+          "country"
+        ]
+      }
+    },
+    "/country/{id}": {
+      "delete": {
+        "operationId": "CountryController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Country deleted successfully"
+          }
+        },
+        "summary": "Delete country",
+        "tags": [
+          "country"
+        ]
+      }
+    },
+    "/services-mobile": {
+      "get": {
+        "operationId": "ServicesMobileController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Mobile services retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ServiceMobileResponseDto"
+                  }
+                }
               }
             }
-          },
-          "required": [
-            "beneficiaries"
-          ]
+          }
         },
-        "CreateTransfertDto": {
-          "type": "object",
-          "properties": {
-            "amount": {
-              "type": "number"
-            },
-            "name": {
-              "type": "string"
-            },
-            "phone": {
-              "type": "string"
-            },
-            "service_mobile_code": {
+        "summary": "Get all mobile services",
+        "tags": [
+          "services-mobile"
+        ]
+      }
+    },
+    "/services-mobile/enable-or-disable/{id}": {
+      "patch": {
+        "operationId": "ServicesMobileController_enableOrDisable",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
               "type": "string"
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mobile service enabled or disabled successfully"
+          }
+        },
+        "summary": "Enable or disable mobile service",
+        "tags": [
+          "services-mobile"
+        ]
+      }
+    },
+    "/analytics/overview": {
+      "get": {
+        "operationId": "AnalyticsController_getOverview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Analytics overview retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsOverviewResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get analytics overview",
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/analytics/graph": {
+      "get": {
+        "operationId": "AnalyticsController_getGraphData",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Analytics graph data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsGraphDataResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get analytics graph data",
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/analytics/top-beneficiaries": {
+      "get": {
+        "operationId": "AnalyticsController_getTopBeneficiaries",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Top beneficiaries retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsTopBeneficiariesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get top beneficiaries",
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/transferts/send-otp": {
+      "get": {
+        "operationId": "TransfertsController_forgotPassword",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Send transfert OTP successfully"
+          }
+        },
+        "summary": "Send transfert OTP",
+        "tags": [
+          "transferts"
+        ]
+      }
+    },
+    "/transferts/initialise": {
+      "post": {
+        "operationId": "TransfertsController_newTransfert",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransfertDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transaction created successfully"
+          }
+        },
+        "summary": "Initialise a mobile transfert",
+        "tags": [
+          "transferts"
+        ]
+      }
+    },
+    "/transferts": {
+      "get": {
+        "operationId": "TransfertsController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
           },
-          "required": [
-            "amount",
-            "name",
-            "phone",
-            "service_mobile_code"
-          ]
+          {
+            "name": "size",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "transferts retrieved successfully"
+          }
+        },
+        "summary": "Get all transferts",
+        "tags": [
+          "transferts"
+        ]
+      }
+    },
+    "/transferts/{id}": {
+      "get": {
+        "operationId": "TransfertsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transfert retrieved successfully"
+          }
+        },
+        "summary": "Get transfert by ID",
+        "tags": [
+          "transferts"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "FastPay",
+    "description": "This documentation provides all endpoint and entities of FastPay API",
+    "version": "1.0",
+    "contact": {
+
+    }
+  },
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Endpoints for authentication and login"
+    },
+    {
+      "name": "Users",
+      "description": "Endpoints for managing user accounts"
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://merchant-api.fastpay.website/",
+      "description": "For production environment"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "IDisplayText": {
+        "type": "object",
+        "properties": {
+          "lang": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "lang",
+          "value"
+        ]
+      },
+      "IAppError": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "display_messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IDisplayText"
+            }
+          },
+          "details": {
+            "type": "object"
+          },
+          "status_code": {
+            "type": "number"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "IAppErrorDto": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/IAppError"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "LoginRequestDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "UserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fullname": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "country_code": {
+            "type": "string"
+          },
+          "code_phone": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "INIT",
+              "COMPLETE",
+              "PENDING"
+            ]
+          },
+          "firebaseNotificationToken": {
+            "type": "string",
+            "description": "Firebase notification token of the user"
+          },
+          "balance": {
+            "type": "number"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "CLIENT",
+              "MERCHANT",
+              "ADMIN"
+            ]
+          },
+          "kyc_status": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "surname": {
+            "type": "string"
+          },
+          "birth_day": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "fullname",
+          "phone",
+          "email",
+          "country_code",
+          "code_phone",
+          "status",
+          "firebaseNotificationToken",
+          "balance",
+          "role",
+          "kyc_status",
+          "name",
+          "surname",
+          "birth_day"
+        ]
+      },
+      "LoginResponseDto": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserDto"
+          },
+          "auth_token": {
+            "type": "string"
+          },
+          "expire_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "user",
+          "auth_token",
+          "expire_at"
+        ]
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "fullname": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "fullname",
+          "email",
+          "password"
+        ]
+      },
+      "CompleteUserDto": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string"
+          },
+          "code_phone": {
+            "type": "string",
+            "description": "User code_phone"
+          }
+        },
+        "required": [
+          "phone",
+          "code_phone"
+        ]
+      },
+      "UserAuthenticationOtpDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "email"
+          }
         }
+      },
+      "NewPasswordDto": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "description": "Password"
+          },
+          "otp_code": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateOrganisationDto": {
+        "type": "object",
+        "properties": {
+          "libelle": {
+            "type": "string"
+          },
+          "web_site": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "libelle",
+          "web_site"
+        ]
+      },
+      "UpdateOrganisationDto": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "GenerateApiKeyOrganisationDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateWebhookDto": {
+        "type": "object",
+        "properties": {
+          "link": {
+            "type": "string",
+            "description": "The URL of the webhook endpoint"
+          },
+          "title": {
+            "type": "string",
+            "description": "Optional title for the webhook"
+          }
+        },
+        "required": [
+          "link"
+        ]
+      },
+      "UpdateWebhookDto": {
+        "type": "object",
+        "properties": {
+          "link": {
+            "type": "string",
+            "description": "The URL of the webhook endpoint"
+          },
+          "title": {
+            "type": "string",
+            "description": "Optional title for the webhook"
+          }
+        }
+      },
+      "CreateBeneficiaireDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "country_id": {
+            "type": "string"
+          },
+          "code_phone": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "phone",
+          "country_id"
+        ]
+      },
+      "UpdateBeneficiaireDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "NewCreatePaymentDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "organisation_id": {
+            "type": "string"
+          },
+          "extra_data": {
+            "type": "object",
+            "description": "Optional JSON object with additional data"
+          }
+        },
+        "required": [
+          "amount",
+          "description"
+        ]
+      },
+      "NewPaymentDataResponseDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number"
+          },
+          "payment_status": {
+            "type": "string",
+            "enum": [
+              "INIT",
+              "INEXECUTION",
+              "PENDING",
+              "COMPLETE",
+              "FAILED",
+              "TIMEOUT"
+            ]
+          },
+          "when_created": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "launch_url": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount"
+        ]
+      },
+      "NewPaymentResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "PAYMENT",
+              "DIRECT_PAYMENT",
+              "TRANSFERT",
+              "RECHARGE"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/NewPaymentDataResponseDto"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "NewCreateDirectPaymentDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "extra_data": {
+            "type": "object",
+            "description": "Optional JSON object with additional data"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "service_mobile_code": {
+            "type": "string"
+          },
+          "organisation_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "description",
+          "phone"
+        ]
+      },
+      "NewCreateGroupedPaymentDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          },
+          "organisation_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "NewPaymentGroupedResponseDto": {
+        "type": "object",
+        "properties": {
+          "when_created": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "launch_url": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "when_created",
+          "currency",
+          "launch_url",
+          "reference"
+        ]
+      },
+      "CountryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "codeIso2": {
+            "type": "string"
+          },
+          "libelle": {
+            "type": "string"
+          },
+          "transactionsEnabled": {
+            "type": "boolean"
+          },
+          "authEnabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "codeIso2",
+          "libelle",
+          "transactionsEnabled",
+          "authEnabled"
+        ]
+      },
+      "ServiceMobileResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "code_prefix": {
+            "type": "string"
+          },
+          "api_endpoint": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "country",
+          "code_prefix",
+          "isActive",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "AnalyticsOverviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "totalTransactions": {
+            "type": "number"
+          },
+          "totalAmount": {
+            "type": "number"
+          },
+          "successfulTransactions": {
+            "type": "number"
+          },
+          "failedTransactions": {
+            "type": "number"
+          },
+          "commissions": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "totalTransactions",
+          "totalAmount",
+          "successfulTransactions",
+          "failedTransactions",
+          "commissions"
+        ]
+      },
+      "AnalyticsGraphDataResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "AnalyticsTopBeneficiariesResponseDto": {
+        "type": "object",
+        "properties": {
+          "beneficiaries": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "beneficiaries"
+        ]
+      },
+      "CreateTransfertDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "otp_code": {
+            "type": "string"
+          },
+          "service_mobile_code": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "name",
+          "phone",
+          "otp_code",
+          "service_mobile_code"
+        ]
       }
     }
   }
+}

@@ -2,14 +2,21 @@
 
 import { useEffect, Suspense, useState } from "react";
 import { usePaymentsStore } from "@/stores/payments.store";
+import { useGroupedPaymentsStore } from "@/stores/grouped-payments.store";
 import { useMobileServicesStore } from "@/stores/mobile-services.store";
 import { useAuthStore } from "@/stores/auth.store";
 import { PaymentsTable } from "@/components/shared/payments-table";
+import { GroupedPaymentsTable } from "@/components/shared/grouped-payments-table";
+import { PaymentDetailsSheet } from "@/components/shared/payment-details-sheet";
+import { GroupedPaymentDetailsSheet } from "@/components/shared/grouped-payment-details-sheet";
+import { CreateGroupedPaymentDialog } from "@/components/shared/create-grouped-payment-dialog";
+import { GroupedPaymentSuccessDialog } from "@/components/shared/grouped-payment-success-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTableSkeleton } from "@/components/data-table/data-table-skeleton";
-import { Plus, Zap, RefreshCw, CreditCard, Clock, Link2, Settings, Phone, Receipt, CheckCircle2, XCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Zap, Settings, Phone, Receipt, CheckCircle2, XCircle, Users } from "lucide-react";
 import Link from "next/link";
 import {
   Dialog,
@@ -42,7 +49,7 @@ import {
 } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import type { NewCreateDirectPaymentDto } from "@/types/api";
+import type { NewCreateDirectPaymentDto, NewCreateGroupedPaymentDto } from "@/types/api";
 
 interface DirectPaymentFormData {
   amount: number;
@@ -53,14 +60,69 @@ interface DirectPaymentFormData {
 
 export default function PaymentsPage() {
   const { payments, isLoading, pagination, fetchPayments, deletePayment, createDirectPayment } = usePaymentsStore();
+  const { 
+    groupedPayments, 
+    isLoading: isGroupedPaymentsLoading, 
+    pagination: groupedPagination, 
+    fetchGroupedPayments, 
+    deleteGroupedPayment, 
+    createGroupedPayment 
+  } = useGroupedPaymentsStore();
   const { services, fetchServices } = useMobileServicesStore();
   const { isAuthenticated } = useAuthStore();
+  const [activeTab, setActiveTab] = useState("all");
   const [isDirectPaymentOpen, setIsDirectPaymentOpen] = useState(false);
+  const [isGroupedPaymentOpen, setIsGroupedPaymentOpen] = useState(false);
+  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
+  const [createdGroupedPayment, setCreatedGroupedPayment] = useState<{
+    currency: string;
+    when_created: string;
+    launch_url: string;
+    reference: string;
+    reason?: string;
+  } | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteGroupedDialogOpen, setDeleteGroupedDialogOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [paymentToDelete, setPaymentToDelete] = useState<{ id: string; reference?: string } | null>(null);
+  const [groupedPaymentToDelete, setGroupedPaymentToDelete] = useState<{ id: string; reference?: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCreatingDirectPayment, setIsCreatingDirectPayment] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<{
+    id: string;
+    reference?: string;
+    amount: number;
+    description?: string;
+    status: string;
+    transaction_type?: string;
+    createdAt?: string;
+    launch_url?: string;
+    organisation?: {
+      id: string;
+      libelle?: string;
+      description?: string;
+      [key: string]: unknown;
+    };
+    [key: string]: unknown;
+  } | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [selectedGroupedPayment, setSelectedGroupedPayment] = useState<{
+    id: string;
+    reference?: string;
+    reason?: string;
+    launch_url?: string;
+    currency?: string;
+    when_created?: string;
+    createdAt?: string;
+    organisation?: {
+      id: string;
+      libelle?: string;
+      description?: string;
+      [key: string]: unknown;
+    };
+    [key: string]: unknown;
+  } | null>(null);
+  const [groupedPaymentSheetOpen, setGroupedPaymentSheetOpen] = useState(false);
 
   const directPaymentForm = useForm<DirectPaymentFormData>({
     defaultValues: {
@@ -74,9 +136,31 @@ export default function PaymentsPage() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchPayments({ page: 1, size: 10 });
+      fetchGroupedPayments({ page: 1, size: 10 });
       fetchServices();
     }
-  }, [isAuthenticated, fetchPayments, fetchServices]);
+  }, [isAuthenticated, fetchPayments, fetchGroupedPayments, fetchServices]);
+
+  const handleRowClick = (payment: {
+    id: string;
+    reference?: string;
+    amount: number;
+    description?: string;
+    status: string;
+    transaction_type?: string;
+    createdAt?: string;
+    launch_url?: string;
+    organisation?: {
+      id: string;
+      libelle?: string;
+      description?: string;
+      [key: string]: unknown;
+    };
+    [key: string]: unknown;
+  }) => {
+    setSelectedPayment(payment);
+    setSheetOpen(true);
+  };
 
   const handleDeleteClick = (id: string, reference?: string) => {
     setPaymentToDelete({ id, reference });
@@ -129,14 +213,61 @@ export default function PaymentsPage() {
     }
   };
 
+  const handleCreateGroupedPayment = async (data: NewCreateGroupedPaymentDto) => {
+    try {
+      const paymentData = await createGroupedPayment(data);
+      setCreatedGroupedPayment(paymentData);
+      setIsGroupedPaymentOpen(false);
+      setIsSuccessDialogOpen(true);
+      await fetchGroupedPayments({ page: groupedPagination.page, size: groupedPagination.size });
+    } catch (error) {
+      // Error is already handled by the store
+    }
+  };
+
+  const handleDeleteGroupedClick = (id: string, reference?: string) => {
+    setGroupedPaymentToDelete({ id, reference });
+    setDeleteConfirmText("");
+    setDeleteGroupedDialogOpen(true);
+  };
+
+  const handleDeleteGroupedConfirm = async () => {
+    if (!groupedPaymentToDelete) return;
+    
+    const confirmValue = groupedPaymentToDelete.reference || groupedPaymentToDelete.id;
+    if (deleteConfirmText !== confirmValue) {
+      toast.error("Confirmation text does not match");
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await deleteGroupedPayment(groupedPaymentToDelete.id);
+      toast.success("Grouped payment deleted successfully");
+      setDeleteGroupedDialogOpen(false);
+      setGroupedPaymentToDelete(null);
+      setDeleteConfirmText("");
+      await fetchGroupedPayments({ page: groupedPagination.page, size: groupedPagination.size });
+    } catch (error) {
+      // Error is already handled by the store
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat("en-US").format(num);
   };
 
-  const hasPayments = payments.length > 0;
+  // Ensure payments is always an array to prevent filter errors
+  const safePayments = Array.isArray(payments) ? payments : [];
+  const safeGroupedPayments = Array.isArray(groupedPayments) ? groupedPayments : [];
+  const hasPayments = safePayments.length > 0;
+  const hasGroupedPayments = safeGroupedPayments.length > 0;
   const totalPayments = pagination.total;
-  const initiatedPayments = payments.filter((p) => p.status === "INIT").length;
-  const failedPayments = payments.filter((p) => p.status === "FAILED").length;
+  const totalGroupedPayments = groupedPagination.total;
+  const initiatedPayments = safePayments.filter((p) => p.status === "INIT").length;
+  const failedPayments = safePayments.filter((p) => p.status === "FAILED").length;
 
   const statCards = [
     {
@@ -342,154 +473,224 @@ export default function PaymentsPage() {
             </div>
       )}
 
-      {/* Payments Table */}
+      {/* Payments Table with Tabs */}
       <Card>
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle>{hasPayments ? "Transactions" : "Recent Transactions"}</CardTitle>
+              <CardTitle>Transactions</CardTitle>
               <CardDescription>
-                {hasPayments
-                  ? "View and manage your payment transactions"
-                  : "View and manage your payment transactions"}
+                View and manage your payment transactions
               </CardDescription>
             </div>
-            {/* Action Buttons - Moved to table header */}
-            {hasPayments && (
-              <div className="flex flex-wrap gap-2">
-                <Dialog open={isDirectPaymentOpen} onOpenChange={setIsDirectPaymentOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm">
-                      <Phone className="mr-2 h-4 w-4" />
-                      Direct Payment
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Initialize Direct Payment</DialogTitle>
-                      <DialogDescription>
-                        Initialize a direct payment to a specific phone number.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={directPaymentForm.handleSubmit(handleCreateDirectPayment)} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="direct-amount">Amount *</Label>
-                        <Input
-                          id="direct-amount"
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          placeholder="Enter amount"
-                          {...directPaymentForm.register("amount", {
-                            required: "Amount is required",
-                            min: { value: 0.01, message: "Amount must be greater than 0" },
-                            valueAsNumber: true,
-                          })}
-                        />
-                        {directPaymentForm.formState.errors.amount && (
-                          <p className="text-sm text-destructive">
-                            {directPaymentForm.formState.errors.amount.message}
-                          </p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="direct-phone">Phone Number *</Label>
-                        <Input
-                          id="direct-phone"
-                          type="tel"
-                          placeholder="Enter phone number"
-                          {...directPaymentForm.register("phone", {
-                            required: "Phone number is required",
-                          })}
-                        />
-                        {directPaymentForm.formState.errors.phone && (
-                          <p className="text-sm text-destructive">
-                            {directPaymentForm.formState.errors.phone.message}
-                          </p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="service-mobile-code">Mobile Service</Label>
-                        <Select
-                          value={directPaymentForm.watch("service_mobile_code") || ""}
-                          onValueChange={(value) =>
-                            directPaymentForm.setValue("service_mobile_code", value)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select mobile service (optional)" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {services.map((service) => (
-                              <SelectItem key={service.id} value={service.code_prefix}>
-                                {service.name} ({service.code_prefix})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="direct-description">Description *</Label>
-                        <Textarea
-                          id="direct-description"
-                          placeholder="Enter payment description"
-                          {...directPaymentForm.register("description", {
-                            required: "Description is required",
-                          })}
-                        />
-                        {directPaymentForm.formState.errors.description && (
-                          <p className="text-sm text-destructive">
-                            {directPaymentForm.formState.errors.description.message}
-                          </p>
-                        )}
-                      </div>
-                      <DialogFooter>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setIsDirectPaymentOpen(false)}
-                          disabled={isCreatingDirectPayment}
-                        >
-                          Cancel
-                        </Button>
-                        <Button type="submit" disabled={isCreatingDirectPayment}>
-                          {isCreatingDirectPayment ? "Initializing..." : "Initialize Payment"}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-2">
+              {activeTab === "all" && (
+                <>
+                  <Dialog open={isDirectPaymentOpen} onOpenChange={setIsDirectPaymentOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                        <Phone className="mr-2 h-4 w-4" />
+                        Direct Payment
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Initialize Direct Payment</DialogTitle>
+                        <DialogDescription>
+                          Initialize a direct payment to a specific phone number.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={directPaymentForm.handleSubmit(handleCreateDirectPayment)} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="direct-amount">Amount *</Label>
+                          <Input
+                            id="direct-amount"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="Enter amount"
+                            {...directPaymentForm.register("amount", {
+                              required: "Amount is required",
+                              min: { value: 0.01, message: "Amount must be greater than 0" },
+                              valueAsNumber: true,
+                            })}
+                          />
+                          {directPaymentForm.formState.errors.amount && (
+                            <p className="text-sm text-destructive">
+                              {directPaymentForm.formState.errors.amount.message}
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="direct-phone">Phone Number *</Label>
+                          <Input
+                            id="direct-phone"
+                            type="tel"
+                            placeholder="Enter phone number"
+                            {...directPaymentForm.register("phone", {
+                              required: "Phone number is required",
+                            })}
+                          />
+                          {directPaymentForm.formState.errors.phone && (
+                            <p className="text-sm text-destructive">
+                              {directPaymentForm.formState.errors.phone.message}
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="service-mobile-code">Mobile Service</Label>
+                          <Select
+                            value={directPaymentForm.watch("service_mobile_code") || ""}
+                            onValueChange={(value) =>
+                              directPaymentForm.setValue("service_mobile_code", value)
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select mobile service (optional)" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {services.map((service) => (
+                                <SelectItem key={service.id} value={service.code_prefix}>
+                                  {service.name} ({service.code_prefix})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="direct-description">Description *</Label>
+                          <Textarea
+                            id="direct-description"
+                            placeholder="Enter payment description"
+                            {...directPaymentForm.register("description", {
+                              required: "Description is required",
+                            })}
+                          />
+                          {directPaymentForm.formState.errors.description && (
+                            <p className="text-sm text-destructive">
+                              {directPaymentForm.formState.errors.description.message}
+                            </p>
+                          )}
+                        </div>
+                        <DialogFooter>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsDirectPaymentOpen(false)}
+                            disabled={isCreatingDirectPayment}
+                          >
+                            Cancel
+                          </Button>
+                          <Button type="submit" disabled={isCreatingDirectPayment}>
+                            {isCreatingDirectPayment ? "Initializing..." : "Initialize Payment"}
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
 
-                <Button size="sm" asChild>
-                  <Link href="/merchant/payments/manage-payment-links">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Manage Links
-                  </Link>
+                  <Button size="sm" asChild>
+                    <Link href="/merchant/payments/manage-payment-links">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Manage Links
+                    </Link>
+                  </Button>
+                </>
+              )}
+              {activeTab === "grouped" && (
+                <Button 
+                  size="sm" 
+                  onClick={() => setIsGroupedPaymentOpen(true)}
+                >
+                  <Users className="mr-2 h-4 w-4" />
+                  Create Group Payment
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <DataTableSkeleton columnCount={7} rowCount={5} />
-          ) : (
-            <Suspense
-              fallback={<DataTableSkeleton columnCount={7} rowCount={5} />}
-            >
-              <PaymentsTable
-                data={Array.isArray(payments) ? payments : []}
-                onDelete={handleDeleteClick}
-                isLoading={isLoading}
-                pagination={pagination}
-                onPaginationChange={(page, size) => fetchPayments({ page, size })}
-              />
-            </Suspense>
-          )}
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              <TabsTrigger value="all">All Transactions</TabsTrigger>
+              <TabsTrigger value="grouped">Grouped Transactions</TabsTrigger>
+            </TabsList>
+            <TabsContent value="all" className="mt-4">
+              {isLoading ? (
+                <DataTableSkeleton columnCount={9} rowCount={5} />
+              ) : (
+                <Suspense
+                  fallback={<DataTableSkeleton columnCount={9} rowCount={5} />}
+                >
+                  <PaymentsTable
+                    data={safePayments}
+                    onRowClick={handleRowClick}
+                    onDelete={handleDeleteClick}
+                    isLoading={isLoading}
+                    pagination={pagination}
+                    onPaginationChange={(page, size) => fetchPayments({ page, size })}
+                  />
+                </Suspense>
+              )}
+            </TabsContent>
+            <TabsContent value="grouped" className="mt-4">
+              {isGroupedPaymentsLoading ? (
+                <DataTableSkeleton columnCount={6} rowCount={5} />
+              ) : (
+                <Suspense
+                  fallback={<DataTableSkeleton columnCount={6} rowCount={5} />}
+                >
+                  <GroupedPaymentsTable
+                    data={safeGroupedPayments}
+                    onRowClick={(payment) => {
+                      setSelectedGroupedPayment(payment);
+                      setGroupedPaymentSheetOpen(true);
+                    }}
+                    onDelete={handleDeleteGroupedClick}
+                    isLoading={isGroupedPaymentsLoading}
+                    pagination={groupedPagination}
+                    onPaginationChange={(page, size) => fetchGroupedPayments({ page, size })}
+                  />
+                </Suspense>
+              )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Payment Details Sheet */}
+      <PaymentDetailsSheet
+        payment={selectedPayment}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        onDelete={handleDeleteClick}
+      />
+
+      {/* Grouped Payment Details Sheet */}
+      <GroupedPaymentDetailsSheet
+        groupedPayment={selectedGroupedPayment}
+        open={groupedPaymentSheetOpen}
+        onOpenChange={setGroupedPaymentSheetOpen}
+        onDelete={handleDeleteGroupedClick}
+      />
+
+      {/* Create Grouped Payment Dialog */}
+      <CreateGroupedPaymentDialog
+        open={isGroupedPaymentOpen}
+        onOpenChange={setIsGroupedPaymentOpen}
+        onCreate={handleCreateGroupedPayment}
+        isLoading={isGroupedPaymentsLoading}
+      />
+
+      {/* Grouped Payment Success Dialog */}
+      <GroupedPaymentSuccessDialog
+        open={isSuccessDialogOpen}
+        onOpenChange={setIsSuccessDialogOpen}
+        paymentData={createdGroupedPayment}
+      />
+
+      {/* Delete Confirmation Dialog for Regular Payments */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -520,6 +721,46 @@ export default function PaymentsPage() {
               disabled={
                 isDeleting ||
                 deleteConfirmText !== (paymentToDelete?.reference || paymentToDelete?.id)
+              }
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Confirmation Dialog for Grouped Payments */}
+      <AlertDialog open={deleteGroupedDialogOpen} onOpenChange={setDeleteGroupedDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Group Payment</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the group payment link and all associated data.
+              <br />
+              <br />
+              To confirm, please type{" "}
+              <strong className="font-mono">
+                {groupedPaymentToDelete?.reference || groupedPaymentToDelete?.id}
+              </strong>{" "}
+              below:
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 py-4">
+            <Input
+              placeholder="Enter confirmation text"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              disabled={isDeleting}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteGroupedConfirm}
+              disabled={
+                isDeleting ||
+                deleteConfirmText !== (groupedPaymentToDelete?.reference || groupedPaymentToDelete?.id)
               }
               className="bg-destructive hover:bg-destructive/90"
             >

@@ -39,6 +39,8 @@ interface AuthState {
     password: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
+  sendPasswordResetOtp: (email: string) => Promise<string>;
+  resetPassword: (userId: string, password: string, otpCode: string) => Promise<void>;
   setUser: (user: UserDto | null) => void;
   clearError: () => void;
   getRole: () => UserRole | null;
@@ -119,6 +121,37 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: false,
             error: null,
           });
+        }
+      },
+
+      sendPasswordResetOtp: async (email: string): Promise<string> => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await authController.forgotPassword({ email });
+          // Response structure: { user_id: string }
+          const userId = response.user_id;
+          if (!userId) {
+            throw new Error("User ID not found in response");
+          }
+          set({ isLoading: false });
+          return userId;
+        } catch (error) {
+          set({ isLoading: false });
+          throw error;
+        }
+      },
+
+      resetPassword: async (userId: string, password: string, otpCode: string): Promise<void> => {
+        set({ isLoading: true, error: null });
+        try {
+          await authController.resetPassword(userId, {
+            password,
+            otp_code: otpCode,
+          });
+          set({ isLoading: false });
+        } catch (error) {
+          set({ isLoading: false });
+          throw error;
         }
       },
 

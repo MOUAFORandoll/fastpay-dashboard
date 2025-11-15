@@ -13,7 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, Trash2 } from "lucide-react";
+import { MoreHorizontal, Eye, Trash2, Copy, Check } from "lucide-react";
 interface Payment {
   id: string;
   reference?: string;
@@ -22,10 +22,14 @@ interface Payment {
   status: string;
   transaction_type?: string;
   createdAt?: string;
+  launch_url?: string;
   organisation?: {
     id: string;
     libelle?: string;
     description?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    apiKeys?: unknown[];
     [key: string]: unknown;
   };
   [key: string]: unknown;
@@ -35,6 +39,7 @@ interface PaymentsTableProps {
   data: Payment[];
   onView?: (id: string) => void;
   onDelete?: (id: string, reference?: string) => void;
+  onRowClick?: (payment: Payment) => void;
   isLoading?: boolean;
   pagination?: {
     page: number;
@@ -57,10 +62,23 @@ export const PaymentsTable = ({
   data,
   onView,
   onDelete,
+  onRowClick,
   isLoading = false,
   pagination,
   onPaginationChange,
 }: PaymentsTableProps) => {
+  const [copiedId, setCopiedId] = React.useState<string | null>(null);
+
+  const handleCopyLink = async (url: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (error) {
+      console.error("Failed to copy:", error);
+    }
+  };
+
   const columns = useMemo<ColumnDef<Payment>[]>(
     () => [
       {
@@ -97,6 +115,15 @@ export const PaymentsTable = ({
         ),
       },
       {
+        accessorKey: "organisation",
+        header: "Organisation",
+        cell: ({ row }) => (
+          <div className="max-w-[150px] truncate">
+            {row.original.organisation?.libelle || "-"}
+          </div>
+        ),
+      },
+      {
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => {
@@ -119,6 +146,37 @@ export const PaymentsTable = ({
             {row.original.transaction_type || "PAYMENT_LINK"}
           </Badge>
         ),
+      },
+      {
+        accessorKey: "launch_url",
+        header: "Payment Link",
+        cell: ({ row }) => {
+          const launchUrl = row.original.launch_url;
+          if (!launchUrl) return <div className="text-muted-foreground">-</div>;
+          
+          const isCopied = copiedId === row.original.id;
+          
+          return (
+            <div className="flex items-center gap-2 max-w-[300px]">
+              <div className="flex-1 truncate text-sm font-mono text-primary">
+                {launchUrl}
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0"
+                onClick={() => handleCopyLink(launchUrl, row.original.id)}
+                title="Copy payment link"
+              >
+                {isCopied ? (
+                  <Check className="h-4 w-4 text-green-600" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          );
+        },
       },
       {
         accessorKey: "createdAt",
@@ -160,7 +218,7 @@ export const PaymentsTable = ({
         ),
       },
     ],
-    [onView, onDelete]
+    [onView, onDelete, copiedId]
   );
 
   const pageCount = pagination
@@ -205,6 +263,6 @@ export const PaymentsTable = ({
     }
   }, [table.getState().pagination.pageIndex, table.getState().pagination.pageSize]);
 
-  return <DataTable table={table} />;
+  return <DataTable table={table} onRowClick={onRowClick} />;
 };
 

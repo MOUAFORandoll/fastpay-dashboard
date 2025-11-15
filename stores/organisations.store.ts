@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { organisationsController } from "@/controllers/organisations.controller";
+import { apiKeysController } from "@/controllers/api-keys.controller";
 import type {
   CreateOrganisationDto,
   UpdateOrganisationDto,
@@ -24,7 +25,8 @@ interface ApiKey {
   id: string;
   title: string;
   description?: string;
-  key: string;
+  key?: string;
+  secret?: string;
   createdAt?: string;
   [key: string]: unknown;
 }
@@ -53,19 +55,21 @@ interface OrganisationsState {
   generateApiKey: (
     organisation: string,
     data: GenerateApiKeyOrganisationDto
-  ) => Promise<void>;
+  ) => Promise<unknown>;
   fetchApiKeys: (organisation: string) => Promise<void>;
   createWebhook: (
-    organisation: string,
+    apiKeyId: string,
     data: CreateWebhookDto
   ) => Promise<void>;
-  fetchWebhooks: (organisation: string) => Promise<void>;
+  fetchWebhooks: (apiKeyId: string) => Promise<void>;
   updateWebhook: (
-    organisation: string,
+    apiKeyId: string,
     webhookId: string,
     data: UpdateWebhookDto
   ) => Promise<void>;
-  deleteWebhook: (organisation: string, webhookId: string) => Promise<void>;
+  deleteWebhook: (apiKeyId: string, webhookId: string) => Promise<void>;
+  regenerateApiKeySecret: (apiKeyId: string) => Promise<unknown>;
+  deleteApiKey: (apiKeyId: string) => Promise<void>;
   setCurrentOrganisationId: (id: string | null) => void;
   getCurrentOrganisation: () => Organisation | null;
   hasOrganisation: () => boolean;
@@ -209,9 +213,10 @@ export const useOrganisationsStore = create<OrganisationsState>()(
     generateApiKey: async (organisation, data) => {
       set({ isLoading: true, error: null });
       try {
-        await organisationsController.generateApiKey(organisation, data);
+        const response = await apiKeysController.generateApiKey(organisation, data);
         await get().fetchApiKeys(organisation);
         set({ isLoading: false });
+        return response;
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Failed to generate API key";
@@ -223,7 +228,7 @@ export const useOrganisationsStore = create<OrganisationsState>()(
     fetchApiKeys: async (organisation) => {
       set({ isLoading: true, error: null });
       try {
-        const response = await organisationsController.listApiKeys(organisation);
+        const response = await apiKeysController.listApiKeys(organisation);
         const keys = Array.isArray(response)
           ? response
           : (response as { data?: ApiKey[]; keys?: ApiKey[] })?.data ||
@@ -237,11 +242,11 @@ export const useOrganisationsStore = create<OrganisationsState>()(
       }
     },
 
-    createWebhook: async (organisation, data) => {
+    createWebhook: async (apiKeyId, data) => {
       set({ isLoading: true, error: null });
       try {
-        await organisationsController.createWebhook(organisation, data);
-        await get().fetchWebhooks(organisation);
+        await apiKeysController.createWebhook(apiKeyId, data);
+        await get().fetchWebhooks(apiKeyId);
         set({ isLoading: false });
       } catch (error) {
         const errorMessage =
@@ -251,12 +256,10 @@ export const useOrganisationsStore = create<OrganisationsState>()(
       }
     },
 
-    fetchWebhooks: async (organisation) => {
+    fetchWebhooks: async (apiKeyId) => {
       set({ isLoading: true, error: null });
       try {
-        const response = await organisationsController.getWebhooks(
-          organisation
-        );
+        const response = await apiKeysController.getWebhooks(apiKeyId);
         const hooks = Array.isArray(response)
           ? response
           : (response as { data?: Webhook[]; webhooks?: Webhook[] })?.data ||
@@ -271,15 +274,11 @@ export const useOrganisationsStore = create<OrganisationsState>()(
       }
     },
 
-    updateWebhook: async (organisation, webhookId, data) => {
+    updateWebhook: async (apiKeyId, webhookId, data) => {
       set({ isLoading: true, error: null });
       try {
-        await organisationsController.updateWebhook(
-          organisation,
-          webhookId,
-          data
-        );
-        await get().fetchWebhooks(organisation);
+        await apiKeysController.updateWebhook(apiKeyId, webhookId, data);
+        await get().fetchWebhooks(apiKeyId);
         set({ isLoading: false });
       } catch (error) {
         const errorMessage =
@@ -289,10 +288,10 @@ export const useOrganisationsStore = create<OrganisationsState>()(
       }
     },
 
-    deleteWebhook: async (organisation, webhookId) => {
+    deleteWebhook: async (apiKeyId, webhookId) => {
       set({ isLoading: true, error: null });
       try {
-        await organisationsController.deleteWebhook(organisation, webhookId);
+        await apiKeysController.deleteWebhook(apiKeyId, webhookId);
         set({
           webhooks: get().webhooks.filter((w) => w.id !== webhookId),
           isLoading: false,
@@ -300,6 +299,37 @@ export const useOrganisationsStore = create<OrganisationsState>()(
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Failed to delete webhook";
+        set({ isLoading: false, error: errorMessage });
+        throw error;
+      }
+    },
+
+    regenerateApiKeySecret: async (apiKeyId) => {
+      set({ isLoading: true, error: null });
+      try {
+        const response = await apiKeysController.regenerateApiKeySecret(apiKeyId);
+        set({ isLoading: false });
+        return response;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to regenerate secret key";
+        set({ isLoading: false, error: errorMessage });
+        throw error;
+      }
+    },
+
+    deleteApiKey: async (apiKeyId) => {
+      set({ isLoading: true, error: null });
+      try {
+        await apiKeysController.deleteApiKey(apiKeyId);
+        const state = get();
+        const updatedKeys = state.apiKeys.filter((key) => key.id !== apiKeyId);
+        set({ apiKeys: updatedKeys, isLoading: false });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to delete API key";
         set({ isLoading: false, error: errorMessage });
         throw error;
       }

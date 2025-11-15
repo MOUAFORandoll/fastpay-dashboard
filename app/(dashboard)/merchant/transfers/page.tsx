@@ -1,24 +1,79 @@
 "use client";
 
-import { useEffect, Suspense } from "react";
+import { useEffect, Suspense, useState } from "react";
 import { useTransfersStore } from "@/stores/transfers.store";
 import { useAuthStore } from "@/stores/auth.store";
+import { useMobileServicesStore } from "@/stores/mobile-services.store";
 import { TransfersTable } from "@/components/shared/transfers-table";
+import { TransferDetailsSheet } from "@/components/shared/transfer-details-sheet";
+import { CreateTransferDialog } from "@/components/shared/create-transfer-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTableSkeleton } from "@/components/data-table/data-table-skeleton";
 import { Plus, Building2, Smartphone, RefreshCw, Shield } from "lucide-react";
+import { toast } from "sonner";
 import Link from "next/link";
+import type { CreateTransfertDto } from "@/types/api";
+
+interface Transfer {
+  id: string;
+  amount: number;
+  reference?: string;
+  status?: string;
+  createdAt?: string;
+  beneficiary?: {
+    id: string;
+    name?: string | null;
+    phone?: string;
+    [key: string]: unknown;
+  };
+  service_mobile?: {
+    id: string;
+    name?: string;
+    country?: string;
+    code_prefix?: string;
+    api_endpoint?: string | null;
+    isActive?: boolean;
+    createdAt?: string;
+    updatedAt?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
 
 export default function TransfersPage() {
-  const { transfers, isLoading, fetchTransfers } = useTransfersStore();
+  const { transfers, isLoading, pagination, fetchTransfers, initializeTransfer } = useTransfersStore();
   const { isAuthenticated } = useAuthStore();
+  const { services, fetchServices } = useMobileServicesStore();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchTransfers();
+      fetchTransfers({ page: 1, size: 10 });
+      fetchServices();
     }
-  }, [isAuthenticated, fetchTransfers]);
+  }, [isAuthenticated, fetchTransfers, fetchServices]);
+
+  const handleCreateTransfer = async (data: CreateTransfertDto) => {
+    setIsCreating(true);
+    try {
+      await initializeTransfer(data);
+      await fetchTransfers({ page: 1, size: 10 });
+      setIsCreateDialogOpen(false);
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleRowClick = (transfer: Transfer) => {
+    setSelectedTransfer(transfer);
+    setSheetOpen(true);
+  };
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -35,11 +90,9 @@ export default function TransfersPage() {
           your withdrawals via our API.
         </p>
         <div className="flex gap-4">
-          <Button asChild size="lg">
-            <Link href="/merchant/transfers/create">
-              <Plus className="mr-2 h-4 w-4" />
-              Create new transfer
-            </Link>
+          <Button size="lg" onClick={() => setIsCreateDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create new transfer
           </Button>
           <Button variant="outline" size="lg">
             Learn more
@@ -111,11 +164,33 @@ export default function TransfersPage() {
             <Suspense
               fallback={<DataTableSkeleton columnCount={6} rowCount={5} />}
             >
-              <TransfersTable data={Array.isArray(transfers) ? transfers : []} isLoading={isLoading} />
+              <TransfersTable
+                data={Array.isArray(transfers) ? transfers : []}
+                isLoading={isLoading}
+                onRowClick={handleRowClick}
+                pagination={pagination}
+                onPaginationChange={(page, size) => fetchTransfers({ page, size })}
+              />
             </Suspense>
           )}
         </CardContent>
       </Card>
+
+      {/* Create Transfer Dialog */}
+      <CreateTransferDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        services={services}
+        onCreateTransfer={handleCreateTransfer}
+        isLoading={isCreating}
+      />
+
+      {/* Transfer Details Sheet */}
+      <TransferDetailsSheet
+        transfer={selectedTransfer}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+      />
 
       {/* Help Section */}
       <div className="flex flex-col gap-4 rounded-lg border p-6 md:flex-row md:items-center md:justify-between">

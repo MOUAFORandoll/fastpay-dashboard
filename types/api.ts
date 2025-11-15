@@ -53,6 +53,27 @@ export interface NewPasswordDto {
 }
 
 // Payment Types
+export interface PaymentResponseDto {
+  id: string;
+  amount: number;
+  reference?: string;
+  description?: string;
+  status: "INIT" | "INEXECUTION" | "PENDING" | "COMPLETE" | "FAILED" | "TIMEOUT";
+  transaction_type?: "PAYMENT" | "DIRECT_PAYMENT" | "TRANSFERT" | "RECHARGE";
+  launch_url?: string;
+  createdAt?: string;
+  organisation?: {
+    id: string;
+    libelle?: string;
+    description?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    apiKeys?: unknown[];
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
 export interface NewCreatePaymentDto {
   amount: number;
   description: string;
@@ -162,6 +183,36 @@ export interface CreateTransfertDto {
   name: string;
   phone: string;
   service_mobile_code: string;
+  otp_code: string;
+}
+
+// Grouped Payment Types
+export interface NewCreateGroupedPaymentDto {
+  reason: string;
+  organisation_id?: string;
+}
+
+export interface NewPaymentGroupedResponseDto {
+  when_created: string;
+  currency: string;
+  launch_url: string;
+  reference: string;
+}
+
+export interface GroupedPaymentResponseDto {
+  id: string;
+  reference?: string;
+  reason?: string;
+  launch_url?: string;
+  currency?: string;
+  when_created?: string;
+  organisation?: {
+    id: string;
+    libelle?: string;
+    description?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
 }
 
 // Error Types

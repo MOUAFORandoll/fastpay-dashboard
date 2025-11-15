@@ -3,6 +3,10 @@ import { getCurrentOrganisationId } from "@/lib/api/config";
 import type { CreateTransfertDto } from "@/types/api";
 
 export const transfersController = {
+  sendTransferOtp: async (): Promise<{ message: string }> => {
+    return apiGet<{ message: string }>("/transferts/send-otp");
+  },
+
   initializeTransfer: async (
     data: CreateTransfertDto & { organisation_id?: string }
   ): Promise<{ message: string }> => {
