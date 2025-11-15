@@ -53,6 +53,27 @@ export interface NewPasswordDto {
 }
 
 // Payment Types
+export interface PaymentResponseDto {
+  id: string;
+  amount: number;
+  reference?: string;
+  description?: string;
+  status: "INIT" | "INEXECUTION" | "PENDING" | "COMPLETE" | "FAILED" | "TIMEOUT";
+  transaction_type?: "PAYMENT" | "DIRECT_PAYMENT" | "TRANSFERT" | "RECHARGE";
+  launch_url?: string;
+  createdAt?: string;
+  organisation?: {
+    id: string;
+    libelle?: string;
+    description?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    apiKeys?: unknown[];
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
 export interface NewCreatePaymentDto {
   amount: number;
   description: string;

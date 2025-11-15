@@ -252,10 +252,10 @@ export default function ManagePaymentLinksPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <DataTableSkeleton columnCount={7} rowCount={5} />
+            <DataTableSkeleton columnCount={9} rowCount={5} />
           ) : (
             <Suspense
-              fallback={<DataTableSkeleton columnCount={7} rowCount={5} />}
+              fallback={<DataTableSkeleton columnCount={9} rowCount={5} />}
             >
               <PaymentsTable
                 data={Array.isArray(payments) ? payments : []}

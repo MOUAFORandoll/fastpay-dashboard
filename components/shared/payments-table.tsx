@@ -27,6 +27,9 @@ interface Payment {
     id: string;
     libelle?: string;
     description?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    apiKeys?: unknown[];
     [key: string]: unknown;
   };
   [key: string]: unknown;
@@ -106,6 +109,15 @@ export const PaymentsTable = ({
         cell: ({ row }) => (
           <div className="max-w-[200px] truncate">
             {row.original.description || row.original.organisation?.description || "-"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "organisation",
+        header: "Organisation",
+        cell: ({ row }) => (
+          <div className="max-w-[150px] truncate">
+            {row.original.organisation?.libelle || "-"}
           </div>
         ),
       },

@@ -19,6 +19,9 @@ interface Payment {
     id: string;
     libelle?: string;
     description?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    apiKeys?: unknown[];
     [key: string]: unknown;
   };
   [key: string]: unknown;
@@ -69,31 +72,37 @@ export const usePaymentsStore = create<PaymentsState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await paymentsController.getAllPayments(params);
-      // API response structure: { paiements: { content: Payment[], page: number, size: number, total: number } }
+      // API response structure: { payments: { content: Payment[], page: number, size: number, total: number } }
       let data: Payment[] = [];
       let total = 0;
       let page = params?.page || 1;
       let size = params?.size || 10;
 
       if (response && typeof response === "object") {
-        const paiements = (response as { paiements?: { content?: Payment[]; page?: number; size?: number; total?: number } })?.paiements;
-        if (paiements) {
-          data = Array.isArray(paiements.content) ? paiements.content : [];
-          total = paiements.total || 0;
-          page = paiements.page || page;
-          size = paiements.size || size;
-        } else if (Array.isArray(response)) {
-          // Fallback: if response is directly an array
-          data = response;
-          total = data.length;
-        } else if ((response as { data?: Payment[]; payments?: Payment[] })?.data) {
-          // Fallback: check for data property
-          data = (response as { data?: Payment[] })?.data || [];
-          total = data.length;
-        } else if ((response as { data?: Payment[]; payments?: Payment[] })?.payments) {
-          // Fallback: check for payments property
-          data = (response as { payments?: Payment[] })?.payments || [];
-          total = data.length;
+        // Check for new structure: { payments: { content: [...], page, size, total } }
+        const payments = (response as { payments?: { content?: Payment[]; page?: number; size?: number; total?: number } })?.payments;
+        if (payments) {
+          data = Array.isArray(payments.content) ? payments.content : [];
+          total = payments.total || 0;
+          page = payments.page || page;
+          size = payments.size || size;
+        } else {
+          // Fallback to old structure: { paiements: { content: [...], page, size, total } }
+          const paiements = (response as { paiements?: { content?: Payment[]; page?: number; size?: number; total?: number } })?.paiements;
+          if (paiements) {
+            data = Array.isArray(paiements.content) ? paiements.content : [];
+            total = paiements.total || 0;
+            page = paiements.page || page;
+            size = paiements.size || size;
+          } else if (Array.isArray(response)) {
+            // Fallback: if response is directly an array
+            data = response;
+            total = data.length;
+          } else if ((response as { data?: Payment[] })?.data) {
+            // Fallback: check for data property
+            data = (response as { data?: Payment[] })?.data || [];
+            total = data.length;
+          }
         }
       } else if (Array.isArray(response)) {
         data = response;
@@ -150,28 +159,35 @@ export const usePaymentsStore = create<PaymentsState>((set, get) => ({
     set({ isLoading: true, error: null, filters });
     try {
       const response = await paymentsController.filterPayments(filters, params);
-      // API response structure: { paiements: { content: Payment[], page: number, size: number, total: number } }
+      // API response structure: { payments: { content: Payment[], page: number, size: number, total: number } }
       let data: Payment[] = [];
       let total = 0;
       let page = params?.page || 1;
       let size = params?.size || 10;
 
       if (response && typeof response === "object") {
-        const paiements = (response as { paiements?: { content?: Payment[]; page?: number; size?: number; total?: number } })?.paiements;
-        if (paiements) {
-          data = Array.isArray(paiements.content) ? paiements.content : [];
-          total = paiements.total || 0;
-          page = paiements.page || page;
-          size = paiements.size || size;
-        } else if (Array.isArray(response)) {
-          data = response;
-          total = data.length;
-        } else if ((response as { data?: Payment[]; payments?: Payment[] })?.data) {
-          data = (response as { data?: Payment[] })?.data || [];
-          total = data.length;
-        } else if ((response as { data?: Payment[]; payments?: Payment[] })?.payments) {
-          data = (response as { payments?: Payment[] })?.payments || [];
-          total = data.length;
+        // Check for new structure: { payments: { content: [...], page, size, total } }
+        const payments = (response as { payments?: { content?: Payment[]; page?: number; size?: number; total?: number } })?.payments;
+        if (payments) {
+          data = Array.isArray(payments.content) ? payments.content : [];
+          total = payments.total || 0;
+          page = payments.page || page;
+          size = payments.size || size;
+        } else {
+          // Fallback to old structure: { paiements: { content: [...], page, size, total } }
+          const paiements = (response as { paiements?: { content?: Payment[]; page?: number; size?: number; total?: number } })?.paiements;
+          if (paiements) {
+            data = Array.isArray(paiements.content) ? paiements.content : [];
+            total = paiements.total || 0;
+            page = paiements.page || page;
+            size = paiements.size || size;
+          } else if (Array.isArray(response)) {
+            data = response;
+            total = data.length;
+          } else if ((response as { data?: Payment[] })?.data) {
+            data = (response as { data?: Payment[] })?.data || [];
+            total = data.length;
+          }
         }
       } else if (Array.isArray(response)) {
         data = response;
