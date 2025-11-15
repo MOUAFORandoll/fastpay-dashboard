@@ -213,10 +213,9 @@ export const usePaymentsStore = create<PaymentsState>((set, get) => ({
   createPayment: async (data) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await paymentsController.createPayment(data);
+      await paymentsController.createPayment(data);
       await get().fetchPayments();
       set({ isLoading: false });
-      return response;
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to create payment";

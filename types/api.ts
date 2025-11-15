@@ -185,6 +185,35 @@ export interface CreateTransfertDto {
   service_mobile_code: string;
 }
 
+// Grouped Payment Types
+export interface NewCreateGroupedPaymentDto {
+  reason: string;
+  organisation_id?: string;
+}
+
+export interface NewPaymentGroupedResponseDto {
+  when_created: string;
+  currency: string;
+  launch_url: string;
+  reference: string;
+}
+
+export interface GroupedPaymentResponseDto {
+  id: string;
+  reference?: string;
+  reason?: string;
+  launch_url?: string;
+  currency?: string;
+  when_created?: string;
+  organisation?: {
+    id: string;
+    libelle?: string;
+    description?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
 // Error Types
 export interface IDisplayText {
   lang: string;
