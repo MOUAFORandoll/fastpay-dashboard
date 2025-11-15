@@ -53,6 +53,7 @@ import {
   ChevronDown,
   Webhook,
   Trash2,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import type {
@@ -81,6 +82,8 @@ export default function SettingsPage() {
     fetchWebhooks,
     updateWebhook,
     deleteWebhook,
+    generateSecretKey,
+    deleteApiKey,
   } = useOrganisationsStore();
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -88,9 +91,22 @@ export default function SettingsPage() {
   const [isShowApiKeyDialogOpen, setIsShowApiKeyDialogOpen] = useState(false);
   const [isCreateWebhookDialogOpen, setIsCreateWebhookDialogOpen] = useState(false);
   const [isDeleteWebhookDialogOpen, setIsDeleteWebhookDialogOpen] = useState(false);
+  const [isGenerateSecretConfirmOpen, setIsGenerateSecretConfirmOpen] = useState(false);
+  const [isShowSecretDialogOpen, setIsShowSecretDialogOpen] = useState(false);
+  const [isDeleteApiKeyDialogOpen, setIsDeleteApiKeyDialogOpen] = useState(false);
+  const [isGeneratingSecret, setIsGeneratingSecret] = useState(false);
+  const [isDeletingApiKey, setIsDeletingApiKey] = useState(false);
   const [newApiKeyData, setNewApiKeyData] = useState<ApiKeyData | null>(null);
+  const [generatedSecret, setGeneratedSecret] = useState<string | null>(null);
+  const [apiKeyForSecretGeneration, setApiKeyForSecretGeneration] = useState<string | null>(null);
+  const [apiKeyToDelete, setApiKeyToDelete] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   const [copiedKeyId, setCopiedKeyId] = useState<string | null>(null);
   const [copiedSecretId, setCopiedSecretId] = useState<string | null>(null);
+  const [copiedWebhookId, setCopiedWebhookId] = useState<string | null>(null);
   const [expandedApiKeys, setExpandedApiKeys] = useState<Set<string>>(new Set());
   const [selectedApiKeyId, setSelectedApiKeyId] = useState<string | null>(null);
   const [webhookToDelete, setWebhookToDelete] = useState<{
@@ -116,6 +132,25 @@ export default function SettingsPage() {
       setDescription(organisation.description || "");
     }
   }, [organisation?.id, fetchApiKeys]);
+
+  // Fetch webhooks for all API keys when they're loaded
+  useEffect(() => {
+    const fetchAllWebhooks = async () => {
+      if (apiKeys.length > 0) {
+        for (const apiKey of apiKeys) {
+          try {
+            setSelectedApiKeyId(apiKey.id);
+            await fetchWebhooks(apiKey.id);
+            // The second useEffect will update apiKeyWebhooks when webhooks state changes
+          } catch (error) {
+            console.error(`Failed to fetch webhooks for API key ${apiKey.id}:`, error);
+          }
+        }
+      }
+    };
+    fetchAllWebhooks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiKeys.length]); // Only fetch when API keys count changes
 
   // Update webhooks when store webhooks change for the selected API key
   useEffect(() => {
@@ -222,20 +257,14 @@ export default function SettingsPage() {
   };
 
   const handleToggleApiKey = async (apiKeyId: string) => {
-    const newExpanded = new Set(expandedApiKeys);
-    if (newExpanded.has(apiKeyId)) {
-      newExpanded.delete(apiKeyId);
-    } else {
-      newExpanded.add(apiKeyId);
-      // Fetch webhooks when expanding
-      setSelectedApiKeyId(apiKeyId);
-      try {
-        await fetchWebhooks(apiKeyId);
-      } catch (error) {
-        console.error("Failed to fetch webhooks:", error);
-      }
+    // This function is kept for backward compatibility but is no longer used
+    // since we're using cards instead of collapsible
+    setSelectedApiKeyId(apiKeyId);
+    try {
+      await fetchWebhooks(apiKeyId);
+    } catch (error) {
+      console.error("Failed to fetch webhooks:", error);
     }
-    setExpandedApiKeys(newExpanded);
   };
 
   const handleOpenCreateWebhookDialog = (apiKeyId: string) => {
@@ -289,6 +318,106 @@ export default function SettingsPage() {
     } catch (error) {
       console.error("Failed to delete webhook:", error);
     }
+  };
+
+  const handleGenerateSecretClick = (apiKeyId: string) => {
+    setApiKeyForSecretGeneration(apiKeyId);
+    setIsGenerateSecretConfirmOpen(true);
+  };
+
+  const handleGenerateSecret = async () => {
+    if (!apiKeyForSecretGeneration) {
+      return;
+    }
+
+    setIsGeneratingSecret(true);
+    setIsGenerateSecretConfirmOpen(false);
+
+    try {
+      const response = await generateSecretKey(apiKeyForSecretGeneration);
+
+      // Extract secret from response
+      let secretValue: string | null = null;
+
+      if (response && typeof response === "object") {
+        if ("data" in response) {
+          const data = (response as { data?: { secret?: string } }).data;
+          if (data?.secret) {
+            secretValue = data.secret;
+          }
+        } else if ("secret" in response && typeof response.secret === "string") {
+          secretValue = response.secret;
+        }
+      }
+
+      if (secretValue) {
+        setGeneratedSecret(secretValue);
+        setIsShowSecretDialogOpen(true);
+        toast.success("Secret key generated successfully");
+        // Refresh API keys to update the list
+        if (organisation?.id) {
+          await fetchApiKeys(organisation.id);
+        }
+      } else {
+        toast.error("Failed to extract secret key from response");
+      }
+    } catch (error) {
+      console.error("Failed to generate secret key:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to generate secret key. Please try again."
+      );
+    } finally {
+      setIsGeneratingSecret(false);
+    }
+  };
+
+  const handleDeleteApiKeyClick = (apiKey: { id: string; title: string }) => {
+    setApiKeyToDelete(apiKey);
+    setDeleteConfirmationText("");
+    setIsDeleteApiKeyDialogOpen(true);
+  };
+
+  const handleDeleteApiKey = async () => {
+    if (!apiKeyToDelete) {
+      return;
+    }
+
+    if (deleteConfirmationText.trim().toLowerCase() !== "delete") {
+      toast.error("Please type 'delete' to confirm");
+      return;
+    }
+
+    setIsDeletingApiKey(true);
+
+    try {
+      await deleteApiKey(apiKeyToDelete.id);
+      toast.success("API key deleted successfully");
+      setIsDeleteApiKeyDialogOpen(false);
+      setApiKeyToDelete(null);
+      setDeleteConfirmationText("");
+      // Refresh API keys
+      if (organisation?.id) {
+        await fetchApiKeys(organisation.id);
+      }
+    } catch (error) {
+      console.error("Failed to delete API key:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to delete API key. Please try again."
+      );
+    } finally {
+      setIsDeletingApiKey(false);
+    }
+  };
+
+  const handleCopyWebhook = (webhookLink: string, webhookId: string) => {
+    navigator.clipboard.writeText(webhookLink);
+    setCopiedWebhookId(webhookId);
+    setTimeout(() => setCopiedWebhookId(null), 2000);
+    toast.success("Webhook link copied to clipboard");
   };
 
   if (!organisation) {
@@ -415,40 +544,39 @@ export default function SettingsPage() {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {apiKeys.map((apiKey) => (
-                    <Collapsible
-                      key={apiKey.id}
-                      open={expandedApiKeys.has(apiKey.id)}
-                      onOpenChange={() => handleToggleApiKey(apiKey.id)}
-                    >
-                      <div className="rounded-lg border">
-                        <CollapsibleTrigger className="w-full">
-                          <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
-                            <div className="flex-1 min-w-0 text-left">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h4 className="font-medium truncate">{apiKey.title}</h4>
-                                {apiKey.createdAt && (
-                                  <span className="text-xs text-muted-foreground">
-                                    {new Date(apiKey.createdAt).toLocaleDateString()}
-                                  </span>
-                                )}
-                              </div>
-                              {apiKey.description && (
-                                <p className="text-sm text-muted-foreground truncate">
-                                  {apiKey.description}
-                                </p>
-                              )}
-                            </div>
-                            <ChevronDown
-                              className={`h-4 w-4 shrink-0 transition-transform ${
-                                expandedApiKeys.has(apiKey.id) ? "rotate-180" : ""
-                              }`}
-                            />
+                    <Card key={apiKey.id} className="relative">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="text-base flex items-center gap-2 mb-1">
+                              <Key className="h-4 w-4 text-primary" />
+                              <span className="truncate">{apiKey.title}</span>
+                            </CardTitle>
+                            {apiKey.description && (
+                              <CardDescription className="text-xs line-clamp-2">
+                                {apiKey.description}
+                              </CardDescription>
+                            )}
+                            {apiKey.createdAt && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Created {new Date(apiKey.createdAt).toLocaleDateString()}
+                              </p>
+                            )}
                           </div>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <div className="border-t p-4 space-y-4">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteApiKeyClick({ id: apiKey.id, title: apiKey.title })}
+                            disabled={isLoading || isDeletingApiKey}
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4 pt-0">
                             {/* API Key Display */}
                             {apiKey.key ? (
                               <div className="space-y-2">
@@ -479,71 +607,138 @@ export default function SettingsPage() {
                               </p>
                             )}
 
-                            {/* Webhooks Section */}
-                            <div className="space-y-3 pt-4 border-t">
+                            {/* Secret Key Section */}
+                            <div className="space-y-2">
                               <div className="flex items-center justify-between">
-                                <Label className="flex items-center gap-2">
-                                  <Webhook className="h-4 w-4" />
-                                  Webhooks
-                                </Label>
+                                <Label>Secret Key</Label>
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => handleOpenCreateWebhookDialog(apiKey.id)}
-                                  disabled={isLoading}
+                                  onClick={() => handleGenerateSecretClick(apiKey.id)}
+                                  disabled={isLoading || isGeneratingSecret}
+                                  className="h-8"
                                 >
-                                  <Plus className="mr-2 h-3 w-3" />
-                                  Add Webhook
+                                  {isGeneratingSecret &&
+                                  apiKeyForSecretGeneration === apiKey.id ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                      Generating...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <RefreshCw className="mr-2 h-3 w-3" />
+                                      Generate Secret
+                                    </>
+                                  )}
                                 </Button>
                               </div>
-
-                              {(apiKeyWebhooks[apiKey.id] || []).length === 0 ? (
-                                <p className="text-sm text-muted-foreground">
-                                  No webhooks configured for this API key
-                                </p>
-                              ) : (
-                                <div className="space-y-2">
-                                  {(apiKeyWebhooks[apiKey.id] || [])
-                                    .filter((w) => w.id) // Ensure we have valid webhooks
-                                    .map((webhook) => (
-                                      <div
-                                        key={webhook.id}
-                                        className="flex items-center justify-between rounded-md border p-3"
-                                      >
-                                        <div className="flex-1 min-w-0">
-                                          {webhook.title && (
-                                            <p className="font-medium text-sm truncate">
-                                              {webhook.title}
-                                            </p>
-                                          )}
-                                          <p className="text-xs text-muted-foreground truncate">
-                                            {webhook.link}
-                                          </p>
-                                        </div>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => {
-                                            setSelectedApiKeyId(apiKey.id);
-                                            setWebhookToDelete({
-                                              id: webhook.id,
-                                              title: webhook.title,
-                                            });
-                                            setIsDeleteWebhookDialogOpen(true);
-                                          }}
-                                          className="ml-2 shrink-0 text-destructive hover:text-destructive"
-                                        >
-                                          <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                      </div>
-                                    ))}
+                              {apiKey.secret ? (
+                                <div className="flex items-center gap-2">
+                                  <code className="flex-1 text-xs bg-muted px-2 py-1 rounded break-all">
+                                    {apiKey.secret}
+                                  </code>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleCopyApiKey(apiKey.secret!, apiKey.id, "secret")
+                                    }
+                                    className="shrink-0"
+                                  >
+                                    {copiedSecretId === apiKey.id ? (
+                                      <Check className="h-4 w-4 text-green-600" />
+                                    ) : (
+                                      <Copy className="h-4 w-4" />
+                                    )}
+                                  </Button>
                                 </div>
+                              ) : (
+                                <p className="text-xs text-muted-foreground">
+                                  No secret key available. Generate one to get started.
+                                </p>
                               )}
                             </div>
+
+                        {/* Webhooks Section */}
+                        <div className="space-y-3 pt-4 border-t">
+                          <div className="flex items-center justify-between">
+                            <Label className="flex items-center gap-2 text-sm">
+                              <Webhook className="h-4 w-4" />
+                              Webhooks
+                            </Label>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOpenCreateWebhookDialog(apiKey.id)}
+                              disabled={isLoading}
+                              className="h-7 text-xs"
+                            >
+                              <Plus className="mr-1 h-3 w-3" />
+                              Add
+                            </Button>
                           </div>
-                        </CollapsibleContent>
-                      </div>
-                    </Collapsible>
+
+                          {(apiKeyWebhooks[apiKey.id] || []).length === 0 ? (
+                            <p className="text-xs text-muted-foreground">
+                              No webhooks configured
+                            </p>
+                          ) : (
+                            <div className="space-y-2">
+                              {(apiKeyWebhooks[apiKey.id] || [])
+                                .filter((w) => w.id)
+                                .map((webhook) => (
+                                  <div
+                                    key={webhook.id}
+                                    className="flex items-center justify-between rounded-md border p-2 gap-2"
+                                  >
+                                    <div className="flex-1 min-w-0">
+                                      {webhook.title && (
+                                        <p className="font-medium text-xs truncate mb-0.5">
+                                          {webhook.title}
+                                        </p>
+                                      )}
+                                      <p className="text-xs text-muted-foreground truncate">
+                                        {webhook.link}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleCopyWebhook(webhook.link, webhook.id)}
+                                        className="h-7 w-7 p-0"
+                                        title="Copy webhook link"
+                                      >
+                                        {copiedWebhookId === webhook.id ? (
+                                          <Check className="h-3 w-3 text-green-600" />
+                                        ) : (
+                                          <Copy className="h-3 w-3" />
+                                        )}
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                          setSelectedApiKeyId(apiKey.id);
+                                          setWebhookToDelete({
+                                            id: webhook.id,
+                                            title: webhook.title,
+                                          });
+                                          setIsDeleteWebhookDialogOpen(true);
+                                        }}
+                                        className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                        title="Delete webhook"
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               )}
@@ -911,6 +1106,192 @@ export default function SettingsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Generate Secret Key Confirmation Dialog */}
+      <AlertDialog
+        open={isGenerateSecretConfirmOpen}
+        onOpenChange={(open) => {
+          if (!isGeneratingSecret) {
+            setIsGenerateSecretConfirmOpen(open);
+            if (!open) {
+              setApiKeyForSecretGeneration(null);
+            }
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-100 dark:bg-yellow-900/20">
+              <Key className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+            </div>
+            <AlertDialogTitle className="text-xl">Generate New Secret Key</AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              Generating a new secret key will override the previous one. The old secret key
+              will no longer be valid and cannot be recovered. Make sure you have saved your
+              current secret key before proceeding.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isGeneratingSecret}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleGenerateSecret}
+              disabled={isGeneratingSecret}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              {isGeneratingSecret ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                "Generate Secret Key"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete API Key Confirmation Dialog */}
+      <AlertDialog
+        open={isDeleteApiKeyDialogOpen}
+        onOpenChange={(open) => {
+          if (!isDeletingApiKey) {
+            setIsDeleteApiKeyDialogOpen(open);
+            if (!open) {
+              setApiKeyToDelete(null);
+              setDeleteConfirmationText("");
+            }
+          }
+        }}
+      >
+        <AlertDialogContent className="sm:max-w-[500px]">
+          <AlertDialogHeader>
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/20">
+              <Trash2 className="h-6 w-6 text-red-600 dark:text-red-400" />
+            </div>
+            <AlertDialogTitle className="text-xl">Delete API Key</AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              This action cannot be undone. This will permanently delete the API key
+              <strong className="font-semibold"> "{apiKeyToDelete?.title}"</strong> and its
+              associated secret key. All webhooks linked to this API key will also be removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="delete-confirmation" className="text-sm font-medium">
+                Type <span className="font-mono text-destructive">delete</span> to confirm:
+              </Label>
+              <Input
+                id="delete-confirmation"
+                placeholder="Type 'delete' to confirm"
+                value={deleteConfirmationText}
+                onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                disabled={isDeletingApiKey}
+                className="font-mono"
+                autoFocus
+              />
+            </div>
+            <div className="rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-3">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                <strong>Warning:</strong> This action will immediately invalidate the API key
+                and secret. Any applications using this key will stop working.
+              </p>
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingApiKey}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteApiKey}
+              disabled={isDeletingApiKey || deleteConfirmationText.trim().toLowerCase() !== "delete"}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeletingApiKey ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete API Key"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Show Generated Secret Key Dialog */}
+      <Dialog
+        open={isShowSecretDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsShowSecretDialogOpen(false);
+            setGeneratedSecret(null);
+            setApiKeyForSecretGeneration(null);
+            if (organisation?.id) {
+              fetchApiKeys(organisation.id);
+            }
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/20">
+              <Key className="h-6 w-6 text-green-600 dark:text-green-400" />
+            </div>
+            <DialogTitle className="text-2xl">Secret Key Generated</DialogTitle>
+            <DialogDescription className="text-base">
+              Your new secret key has been generated. Please copy it now as it will not be
+              shown again.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Secret Key</Label>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-xs bg-muted px-3 py-2 rounded break-all">
+                  {generatedSecret}
+                </code>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (generatedSecret) {
+                      navigator.clipboard.writeText(generatedSecret);
+                      toast.success("Secret key copied to clipboard");
+                    }
+                  }}
+                  className="shrink-0"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-3">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                <strong>Important:</strong> Store this secret key securely. You will not be
+                able to view it again. If you lose it, you'll need to generate a new secret
+                key, which will override this one.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                setIsShowSecretDialogOpen(false);
+                setGeneratedSecret(null);
+                setApiKeyForSecretGeneration(null);
+                if (organisation?.id) {
+                  fetchApiKeys(organisation.id);
+                }
+              }}
+            >
+              I've copied the secret key
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

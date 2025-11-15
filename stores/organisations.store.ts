@@ -68,6 +68,8 @@ interface OrganisationsState {
     data: UpdateWebhookDto
   ) => Promise<void>;
   deleteWebhook: (apiKeyId: string, webhookId: string) => Promise<void>;
+  generateSecretKey: (apiKeyId: string) => Promise<unknown>;
+  deleteApiKey: (apiKeyId: string) => Promise<void>;
   setCurrentOrganisationId: (id: string | null) => void;
   getCurrentOrganisation: () => Organisation | null;
   hasOrganisation: () => boolean;
@@ -297,6 +299,37 @@ export const useOrganisationsStore = create<OrganisationsState>()(
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Failed to delete webhook";
+        set({ isLoading: false, error: errorMessage });
+        throw error;
+      }
+    },
+
+    generateSecretKey: async (apiKeyId) => {
+      set({ isLoading: true, error: null });
+      try {
+        const response = await apiKeysController.generateSecretKey(apiKeyId);
+        set({ isLoading: false });
+        return response;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to generate secret key";
+        set({ isLoading: false, error: errorMessage });
+        throw error;
+      }
+    },
+
+    deleteApiKey: async (apiKeyId) => {
+      set({ isLoading: true, error: null });
+      try {
+        await apiKeysController.deleteApiKey(apiKeyId);
+        const state = get();
+        const updatedKeys = state.apiKeys.filter((key) => key.id !== apiKeyId);
+        set({ apiKeys: updatedKeys, isLoading: false });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to delete API key";
         set({ isLoading: false, error: errorMessage });
         throw error;
       }

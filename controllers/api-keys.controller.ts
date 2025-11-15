@@ -42,5 +42,13 @@ export const apiKeysController = {
   ): Promise<{ message: string }> => {
     return apiDelete(`/api-keys/${apiKeyId}/webhooks/${webhookId}`);
   },
+
+  generateSecretKey: async (apiKeyId: string): Promise<unknown> => {
+    return apiPost(`/api-keys/${apiKeyId}/generate-secret`, {});
+  },
+
+  deleteApiKey: async (apiKeyId: string): Promise<{ message: string }> => {
+    return apiDelete(`/api-keys/${apiKeyId}`);
+  },
 };
 
