@@ -22,6 +22,7 @@ interface CreateWebhookDialogProps {
   onTitleChange: (value: string) => void;
   onSubmit: (e: React.FormEvent) => Promise<void>;
   isLoading?: boolean;
+  isUpdateMode?: boolean;
 }
 
 export const CreateWebhookDialog = ({
@@ -33,6 +34,7 @@ export const CreateWebhookDialog = ({
   onTitleChange,
   onSubmit,
   isLoading = false,
+  isUpdateMode = false,
 }: CreateWebhookDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -41,9 +43,13 @@ export const CreateWebhookDialog = ({
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
             <Webhook className="h-6 w-6 text-primary" />
           </div>
-          <DialogTitle className="text-2xl">Create Webhook</DialogTitle>
+          <DialogTitle className="text-2xl">
+            {isUpdateMode ? "Update Webhook" : "Create Webhook"}
+          </DialogTitle>
           <DialogDescription className="text-base">
-            Add a webhook endpoint for this API key
+            {isUpdateMode
+              ? "Update the webhook endpoint for this API key. Only one webhook is allowed per API key."
+              : "Add a webhook endpoint for this API key. Only one webhook is allowed per API key."}
           </DialogDescription>
         </DialogHeader>
 
@@ -91,10 +97,10 @@ export const CreateWebhookDialog = ({
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  {isUpdateMode ? "Updating..." : "Creating..."}
                 </>
               ) : (
-                "Create Webhook"
+                isUpdateMode ? "Update Webhook" : "Create Webhook"
               )}
             </Button>
           </DialogFooter>

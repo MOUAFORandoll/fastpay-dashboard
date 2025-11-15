@@ -161,26 +161,29 @@ export const ApiKeyCard = ({
           <div className="flex items-center justify-between">
             <Label className="flex items-center gap-2 text-sm">
               <Webhook className="h-4 w-4" />
-              Webhooks
+              Webhook
             </Label>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onCreateWebhook}
-              disabled={isLoading}
-              className="h-7 text-xs"
-            >
-              <Plus className="mr-1 h-3 w-3" />
-              Add
-            </Button>
+            {apiKeyWebhooks.length === 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onCreateWebhook}
+                disabled={isLoading}
+                className="h-7 text-xs"
+              >
+                <Plus className="mr-1 h-3 w-3" />
+                Add
+              </Button>
+            )}
           </div>
 
           {apiKeyWebhooks.length === 0 ? (
-            <p className="text-xs text-muted-foreground">No webhooks configured</p>
+            <p className="text-xs text-muted-foreground">No webhook configured</p>
           ) : (
             <div className="space-y-2">
               {apiKeyWebhooks
                 .filter((w) => w.id)
+                .slice(0, 1) // Only show the first webhook
                 .map((webhook) => (
                   <WebhookItem
                     key={webhook.id}

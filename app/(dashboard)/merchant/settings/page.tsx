@@ -39,6 +39,7 @@ import type {
   UpdateOrganisationDto,
   GenerateApiKeyOrganisationDto,
   CreateWebhookDto,
+  UpdateWebhookDto,
 } from "@/types/api";
 
 interface ApiKeyData {
@@ -62,6 +63,7 @@ export default function SettingsPage() {
     regenerateApiKeySecret,
     deleteApiKey,
     createWebhook,
+    updateWebhook,
     deleteWebhook,
     fetchWebhooks,
   } = useSettingsStore();
@@ -94,6 +96,7 @@ export default function SettingsPage() {
       title?: string;
     };
   } | null>(null);
+  const [webhookToUpdate, setWebhookToUpdate] = useState<string | null>(null);
   const [copiedKeyId, setCopiedKeyId] = useState<string | null>(null);
   const [copiedSecretId, setCopiedSecretId] = useState<string | null>(null);
   const [selectedApiKeyId, setSelectedApiKeyId] = useState<string | null>(null);
@@ -228,10 +231,25 @@ export default function SettingsPage() {
   };
 
   const handleOpenCreateWebhookDialog = (apiKeyId: string) => {
-    setSelectedApiKeyId(apiKeyId);
-    setWebhookLink("");
-    setWebhookTitle("");
-    setIsCreateWebhookDialogOpen(true);
+    const { webhooks } = useSettingsStore.getState();
+    const existingWebhooks = webhooks[apiKeyId] || [];
+    
+    // If webhook exists, open in update mode
+    if (existingWebhooks.length > 0) {
+      const existingWebhook = existingWebhooks[0];
+      setSelectedApiKeyId(apiKeyId);
+      setWebhookLink(existingWebhook.link);
+      setWebhookTitle(existingWebhook.title || "");
+      setWebhookToUpdate(existingWebhook.id);
+      setIsCreateWebhookDialogOpen(true);
+    } else {
+      // No webhook exists, open in create mode
+      setSelectedApiKeyId(apiKeyId);
+      setWebhookLink("");
+      setWebhookTitle("");
+      setWebhookToUpdate(null);
+      setIsCreateWebhookDialogOpen(true);
+    }
   };
 
   const handleCreateWebhook = async (e: React.FormEvent) => {
@@ -253,13 +271,31 @@ export default function SettingsPage() {
         title: webhookTitle.trim() || undefined,
       };
 
-      await createWebhook(selectedApiKeyId, webhookData);
-      toast.success("Webhook created successfully");
+      // If webhook exists, update it instead of creating
+      if (webhookToUpdate) {
+        await updateWebhook(selectedApiKeyId, webhookToUpdate, webhookData);
+        toast.success("Webhook updated successfully");
+      } else {
+        // Check if webhook already exists
+        const { webhooks } = useSettingsStore.getState();
+        const existingWebhooks = webhooks[selectedApiKeyId] || [];
+        
+        if (existingWebhooks.length > 0) {
+          toast.error("Only one webhook is allowed per API key. Please update or delete the existing webhook.");
+          return;
+        }
+        
+        await createWebhook(selectedApiKeyId, webhookData);
+        toast.success("Webhook created successfully");
+      }
+      
       setIsCreateWebhookDialogOpen(false);
       setWebhookLink("");
       setWebhookTitle("");
+      setWebhookToUpdate(null);
+      await fetchWebhooks(selectedApiKeyId);
     } catch (error) {
-      console.error("Failed to create webhook:", error);
+      console.error("Failed to create/update webhook:", error);
     }
   };
 
@@ -581,7 +617,7 @@ export default function SettingsPage() {
         }}
       />
 
-      {/* Create Webhook Dialog */}
+      {/* Create/Update Webhook Dialog */}
       <CreateWebhookDialog
         open={isCreateWebhookDialogOpen}
         onOpenChange={(open) => {
@@ -589,6 +625,7 @@ export default function SettingsPage() {
           if (!open) {
             setWebhookLink("");
             setWebhookTitle("");
+            setWebhookToUpdate(null);
           }
         }}
         link={webhookLink}
@@ -597,6 +634,7 @@ export default function SettingsPage() {
         onTitleChange={setWebhookTitle}
         onSubmit={handleCreateWebhook}
         isLoading={isLoading}
+        isUpdateMode={!!webhookToUpdate}
       />
 
 
