@@ -2,13 +2,12 @@
 
 import * as React from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -116,8 +115,12 @@ export const CreateTransferDialog = ({
       form.setValue("name", "");
       form.setValue("phone", "");
       form.setValue("beneficiary_id", "");
+      form.clearErrors("name");
+      form.clearErrors("phone");
+      form.clearErrors("beneficiary_id");
     } else {
       form.setValue("beneficiary_id", "");
+      form.clearErrors("beneficiary_id");
     }
   }, [beneficiaryMode, form]);
 
@@ -130,23 +133,31 @@ export const CreateTransferDialog = ({
       return;
     }
 
-    if (beneficiaryMode === "select" && !data.beneficiary_id) {
-      form.setError("beneficiary_id", {
-        type: "required",
-        message: "Please select a beneficiary",
-      });
-      return;
-    }
-
-    if (beneficiaryMode === "manual") {
-      if (!data.name) {
+    // Validate based on selected mode
+    if (beneficiaryMode === "select") {
+      if (!data.beneficiary_id) {
+        form.setError("beneficiary_id", {
+          type: "required",
+          message: "Please select a beneficiary",
+        });
+        return;
+      }
+      // Ensure name and phone are set from selected beneficiary
+      const selectedBeneficiary = beneficiaries.find((b) => b.id === data.beneficiary_id);
+      if (selectedBeneficiary) {
+        data.name = selectedBeneficiary.name;
+        data.phone = selectedBeneficiary.phone;
+      }
+    } else {
+      // Manual mode validation
+      if (!data.name || data.name.trim() === "") {
         form.setError("name", {
           type: "required",
           message: "Recipient name is required",
         });
         return;
       }
-      if (!data.phone) {
+      if (!data.phone || data.phone.trim() === "") {
         form.setError("phone", {
           type: "required",
           message: "Phone number is required",
@@ -198,6 +209,10 @@ export const CreateTransferDialog = ({
   };
 
   const handleClose = () => {
+    // Only allow closing if not in a loading state
+    if (isLoading || isSendingOtp || isSendingOtpLocal || isVerifying) {
+      return;
+    }
     setCurrentStep("form");
     setOtp("");
     setTransferData(null);
@@ -206,24 +221,34 @@ export const CreateTransferDialog = ({
     onOpenChange(false);
   };
 
+  const handleOpenChange = (open: boolean) => {
+    // Prevent closing when clicking outside or pressing ESC
+    if (!open && (isLoading || isSendingOtp || isSendingOtpLocal || isVerifying)) {
+      return;
+    }
+    if (!open) {
+      handleClose();
+    }
+  };
+
   const handleBack = () => {
     setCurrentStep("form");
     setOtp("");
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
+      <AlertDialogContent className="sm:max-w-[500px]">
+        <AlertDialogHeader>
+          <AlertDialogTitle>
             {currentStep === "form" ? "Create New Transfer" : "Verify Transfer"}
-          </DialogTitle>
-          <DialogDescription>
+          </AlertDialogTitle>
+          <AlertDialogDescription>
             {currentStep === "form"
               ? "Enter the transfer details to proceed"
               : "Enter the OTP code sent to your email to confirm the transfer"}
-          </DialogDescription>
-        </DialogHeader>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
 
         {currentStep === "form" ? (
           <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
@@ -249,9 +274,9 @@ export const CreateTransferDialog = ({
             </div>
 
             {/* Beneficiary Selection Mode */}
-            {beneficiaries.length > 0 && (
-              <div className="space-y-3 rounded-lg border p-4">
-                <Label>Beneficiary *</Label>
+            <div className="space-y-3 rounded-lg border p-4">
+              <Label>Recipient Information *</Label>
+              {beneficiaries.length > 0 ? (
                 <RadioGroup
                   value={beneficiaryMode}
                   onValueChange={(value) => setBeneficiaryMode(value as BeneficiaryMode)}
@@ -260,7 +285,7 @@ export const CreateTransferDialog = ({
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="select" id="select-beneficiary" />
                     <Label htmlFor="select-beneficiary" className="font-normal cursor-pointer">
-                      Select from list
+                      Select from beneficiaries
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -270,135 +295,87 @@ export const CreateTransferDialog = ({
                     </Label>
                   </div>
                 </RadioGroup>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No beneficiaries available. Please enter recipient information manually.
+                </p>
+              )}
 
-                {beneficiaryMode === "select" ? (
+              {beneficiaries.length > 0 && beneficiaryMode === "select" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="beneficiary_id">Select Beneficiary *</Label>
+                  <Select
+                    value={form.watch("beneficiary_id")}
+                    onValueChange={handleBeneficiaryChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a beneficiary" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {beneficiaries.map((beneficiary) => (
+                        <SelectItem key={beneficiary.id} value={beneficiary.id}>
+                          {beneficiary.name} - {beneficiary.code_phone && `${beneficiary.code_phone} `}
+                          {beneficiary.phone}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {form.formState.errors.beneficiary_id && (
+                    <p className="text-sm text-destructive">
+                      {form.formState.errors.beneficiary_id.message}
+                    </p>
+                  )}
+                  {form.watch("beneficiary_id") && (
+                    <div className="rounded-md bg-muted/50 p-3 text-sm">
+                      <div className="font-medium">
+                        {beneficiaries.find((b) => b.id === form.watch("beneficiary_id"))?.name}
+                      </div>
+                      <div className="text-muted-foreground">
+                        {beneficiaries.find((b) => b.id === form.watch("beneficiary_id"))?.code_phone && 
+                          `${beneficiaries.find((b) => b.id === form.watch("beneficiary_id"))?.code_phone} `}
+                        {beneficiaries.find((b) => b.id === form.watch("beneficiary_id"))?.phone}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
                   <div className="space-y-2">
-                    <Label htmlFor="beneficiary_id">Select Beneficiary *</Label>
-                    <Select
-                      value={form.watch("beneficiary_id")}
-                      onValueChange={handleBeneficiaryChange}
-                      disabled={beneficiaries.length === 0}
-                    >
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={
-                            beneficiaries.length === 0
-                              ? "No beneficiaries available"
-                              : "Select a beneficiary"
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {beneficiaries.length === 0 ? (
-                          <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                            No beneficiaries available
-                          </div>
-                        ) : (
-                          beneficiaries.map((beneficiary) => (
-                            <SelectItem key={beneficiary.id} value={beneficiary.id}>
-                              {beneficiary.name} - {beneficiary.code_phone && `${beneficiary.code_phone} `}
-                              {beneficiary.phone}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-                    {form.formState.errors.beneficiary_id && (
+                    <Label htmlFor="name">Recipient Name *</Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder="Enter recipient name"
+                      {...form.register("name", {
+                        required: "Recipient name is required",
+                      })}
+                    />
+                    {form.formState.errors.name && (
                       <p className="text-sm text-destructive">
-                        {form.formState.errors.beneficiary_id.message}
+                        {form.formState.errors.name.message}
                       </p>
                     )}
-                    {form.watch("beneficiary_id") && (
-                      <div className="rounded-md bg-muted/50 p-3 text-sm">
-                        <div className="font-medium">
-                          {beneficiaries.find((b) => b.id === form.watch("beneficiary_id"))?.name}
-                        </div>
-                        <div className="text-muted-foreground">
-                          {beneficiaries.find((b) => b.id === form.watch("beneficiary_id"))?.code_phone && 
-                            `${beneficiaries.find((b) => b.id === form.watch("beneficiary_id"))?.code_phone} `}
-                          {beneficiaries.find((b) => b.id === form.watch("beneficiary_id"))?.phone}
-                        </div>
-                      </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number *</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="Enter phone number"
+                      {...form.register("phone", {
+                        required: "Phone number is required",
+                      })}
+                    />
+                    {form.formState.errors.phone && (
+                      <p className="text-sm text-destructive">
+                        {form.formState.errors.phone.message}
+                      </p>
                     )}
                   </div>
-                ) : (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Recipient Name *</Label>
-                      <Input
-                        id="name"
-                        type="text"
-                        placeholder="Enter recipient name"
-                        {...form.register("name", {
-                          required: beneficiaryMode === "manual" ? "Recipient name is required" : false,
-                        })}
-                      />
-                      {form.formState.errors.name && (
-                        <p className="text-sm text-destructive">
-                          {form.formState.errors.name.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number *</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="Enter phone number"
-                        {...form.register("phone", {
-                          required: beneficiaryMode === "manual" ? "Phone number is required" : false,
-                        })}
-                      />
-                      {form.formState.errors.phone && (
-                        <p className="text-sm text-destructive">
-                          {form.formState.errors.phone.message}
-                        </p>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* Manual Entry (when no beneficiaries or manual mode selected) */}
-            {beneficiaries.length === 0 && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="name">Recipient Name *</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Enter recipient name"
-                    {...form.register("name", {
-                      required: "Recipient name is required",
-                    })}
-                  />
-                  {form.formState.errors.name && (
-                    <p className="text-sm text-destructive">
-                      {form.formState.errors.name.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number *</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="Enter phone number"
-                    {...form.register("phone", {
-                      required: "Phone number is required",
-                    })}
-                  />
-                  {form.formState.errors.phone && (
-                    <p className="text-sm text-destructive">
-                      {form.formState.errors.phone.message}
-                    </p>
-                  )}
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="service_mobile_code">Mobile Service *</Label>
@@ -444,7 +421,7 @@ export const CreateTransferDialog = ({
               )}
             </div>
 
-            <DialogFooter>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
@@ -461,7 +438,7 @@ export const CreateTransferDialog = ({
                   </>
                 )}
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         ) : (
           <div className="space-y-6">
@@ -518,7 +495,7 @@ export const CreateTransferDialog = ({
               </p>
             </div>
 
-            <DialogFooter>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button
                 type="button"
                 variant="outline"
@@ -542,11 +519,11 @@ export const CreateTransferDialog = ({
                   "Confirm Transfer"
                 )}
               </Button>
-            </DialogFooter>
+            </div>
           </div>
         )}
-      </DialogContent>
-    </Dialog>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 

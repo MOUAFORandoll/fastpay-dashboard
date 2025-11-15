@@ -65,20 +65,53 @@ export const useBeneficiariesStore = create<BeneficiariesState>(
         const response = await beneficiariesController.getAllBeneficiaries(
           params
         );
-        const data = Array.isArray(response)
-          ? response
-          : (response as { data?: Beneficiary[]; beneficiaries?: Beneficiary[] })
-              ?.data ||
-            (response as { data?: Beneficiary[]; beneficiaries?: Beneficiary[] })
-              ?.beneficiaries ||
-            [];
+        let data: Beneficiary[] = [];
+        let total = 0;
+        let page = params?.page || 1;
+        let size = params?.size || 10;
+
+        if (response && typeof response === "object") {
+          // Check for paginated structure: { beneficiaires: { content: [...], page, size, total } }
+          const beneficiaires = (response as { beneficiaires?: { content?: Beneficiary[]; page?: number; size?: number; total?: number } })?.beneficiaires;
+          if (beneficiaires) {
+            data = Array.isArray(beneficiaires.content) ? beneficiaires.content : [];
+            total = beneficiaires.total || 0;
+            page = beneficiaires.page || page;
+            size = beneficiaires.size || size;
+          } else {
+            // Fallback to English spelling
+            const beneficiaries = (response as { beneficiaries?: { content?: Beneficiary[]; page?: number; size?: number; total?: number } })?.beneficiaries;
+            if (beneficiaries) {
+              data = Array.isArray(beneficiaries.content) ? beneficiaries.content : [];
+              total = beneficiaries.total || 0;
+              page = beneficiaries.page || page;
+              size = beneficiaries.size || size;
+            } else if (Array.isArray(response)) {
+              // Fallback: if response is directly an array
+              data = response;
+              total = data.length;
+            } else if ((response as { data?: Beneficiary[] })?.data) {
+              // Fallback: check for data property
+              data = (response as { data?: Beneficiary[] })?.data || [];
+              total = data.length;
+            } else if ((response as { beneficiaries?: Beneficiary[] })?.beneficiaries) {
+              // Fallback: check for beneficiaries array property
+              data = (response as { beneficiaries?: Beneficiary[] })?.beneficiaries || [];
+              total = data.length;
+            }
+          }
+        } else if (Array.isArray(response)) {
+          data = response;
+          total = data.length;
+        }
+
         set({
           beneficiaries: data,
           isLoading: false,
           pagination: {
-            page: params?.page || 1,
-            size: params?.size || 10,
-            total: (response as { total?: number })?.total || data.length,
+            page,
+            size,
+            total,
           },
         });
       } catch (error) {
@@ -96,20 +129,53 @@ export const useBeneficiariesStore = create<BeneficiariesState>(
         const response = await beneficiariesController.getMyBeneficiaries(
           params
         );
-        const data = Array.isArray(response)
-          ? response
-          : (response as { data?: Beneficiary[]; beneficiaries?: Beneficiary[] })
-              ?.data ||
-            (response as { data?: Beneficiary[]; beneficiaries?: Beneficiary[] })
-              ?.beneficiaries ||
-            [];
+        let data: Beneficiary[] = [];
+        let total = 0;
+        let page = params?.page || 1;
+        let size = params?.size || 10;
+
+        if (response && typeof response === "object") {
+          // Check for paginated structure: { beneficiaires: { content: [...], page, size, total } }
+          const beneficiaires = (response as { beneficiaires?: { content?: Beneficiary[]; page?: number; size?: number; total?: number } })?.beneficiaires;
+          if (beneficiaires) {
+            data = Array.isArray(beneficiaires.content) ? beneficiaires.content : [];
+            total = beneficiaires.total || 0;
+            page = beneficiaires.page || page;
+            size = beneficiaires.size || size;
+          } else {
+            // Fallback to English spelling
+            const beneficiaries = (response as { beneficiaries?: { content?: Beneficiary[]; page?: number; size?: number; total?: number } })?.beneficiaries;
+            if (beneficiaries) {
+              data = Array.isArray(beneficiaries.content) ? beneficiaries.content : [];
+              total = beneficiaries.total || 0;
+              page = beneficiaries.page || page;
+              size = beneficiaries.size || size;
+            } else if (Array.isArray(response)) {
+              // Fallback: if response is directly an array
+              data = response;
+              total = data.length;
+            } else if ((response as { data?: Beneficiary[] })?.data) {
+              // Fallback: check for data property
+              data = (response as { data?: Beneficiary[] })?.data || [];
+              total = data.length;
+            } else if ((response as { beneficiaries?: Beneficiary[] })?.beneficiaries) {
+              // Fallback: check for beneficiaries array property
+              data = (response as { beneficiaries?: Beneficiary[] })?.beneficiaries || [];
+              total = data.length;
+            }
+          }
+        } else if (Array.isArray(response)) {
+          data = response;
+          total = data.length;
+        }
+
         set({
           beneficiaries: data,
           isLoading: false,
           pagination: {
-            page: params?.page || 1,
-            size: params?.size || 10,
-            total: (response as { total?: number })?.total || data.length,
+            page,
+            size,
+            total,
           },
         });
       } catch (error) {
@@ -129,20 +195,53 @@ export const useBeneficiariesStore = create<BeneficiariesState>(
             organisation,
             params
           );
-        const data = Array.isArray(response)
-          ? response
-          : (response as { data?: Beneficiary[]; beneficiaries?: Beneficiary[] })
-              ?.data ||
-            (response as { data?: Beneficiary[]; beneficiaries?: Beneficiary[] })
-              ?.beneficiaries ||
-            [];
+        let data: Beneficiary[] = [];
+        let total = 0;
+        let page = params?.page || 1;
+        let size = params?.size || 10;
+
+        if (response && typeof response === "object") {
+          // Check for paginated structure: { beneficiaires: { content: [...], page, size, total } }
+          const beneficiaires = (response as { beneficiaires?: { content?: Beneficiary[]; page?: number; size?: number; total?: number } })?.beneficiaires;
+          if (beneficiaires) {
+            data = Array.isArray(beneficiaires.content) ? beneficiaires.content : [];
+            total = beneficiaires.total || 0;
+            page = beneficiaires.page || page;
+            size = beneficiaires.size || size;
+          } else {
+            // Fallback to English spelling
+            const beneficiaries = (response as { beneficiaries?: { content?: Beneficiary[]; page?: number; size?: number; total?: number } })?.beneficiaries;
+            if (beneficiaries) {
+              data = Array.isArray(beneficiaries.content) ? beneficiaries.content : [];
+              total = beneficiaries.total || 0;
+              page = beneficiaries.page || page;
+              size = beneficiaries.size || size;
+            } else if (Array.isArray(response)) {
+              // Fallback: if response is directly an array
+              data = response;
+              total = data.length;
+            } else if ((response as { data?: Beneficiary[] })?.data) {
+              // Fallback: check for data property
+              data = (response as { data?: Beneficiary[] })?.data || [];
+              total = data.length;
+            } else if ((response as { beneficiaries?: Beneficiary[] })?.beneficiaries) {
+              // Fallback: check for beneficiaries array property
+              data = (response as { beneficiaries?: Beneficiary[] })?.beneficiaries || [];
+              total = data.length;
+            }
+          }
+        } else if (Array.isArray(response)) {
+          data = response;
+          total = data.length;
+        }
+
         set({
           beneficiaries: data,
           isLoading: false,
           pagination: {
-            page: params?.page || 1,
-            size: params?.size || 10,
-            total: (response as { total?: number })?.total || data.length,
+            page,
+            size,
+            total,
           },
         });
       } catch (error) {

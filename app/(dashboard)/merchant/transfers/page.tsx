@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTableSkeleton } from "@/components/data-table/data-table-skeleton";
 import { Plus, Building2, Smartphone, RefreshCw, Shield } from "lucide-react";
-import { toast } from "sonner";
 import Link from "next/link";
 import type { CreateTransfertDto } from "@/types/api";
 
