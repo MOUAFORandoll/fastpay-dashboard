@@ -20,6 +20,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@/components/ui/radio-group";
+import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
@@ -31,10 +35,20 @@ import { useTransfersStore } from "@/stores/transfers.store";
 import type { CreateTransfertDto } from "@/types/api";
 import type { ServiceMobileResponseDto } from "@/types/api";
 
+interface Beneficiary {
+  id: string;
+  name: string;
+  phone: string;
+  country_id: string;
+  code_phone?: string;
+  [key: string]: unknown;
+}
+
 interface CreateTransferDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   services: ServiceMobileResponseDto[];
+  beneficiaries?: Beneficiary[];
   onCreateTransfer: (data: CreateTransfertDto) => Promise<void>;
   isLoading?: boolean;
 }
@@ -44,19 +58,25 @@ interface TransferFormData {
   name: string;
   phone: string;
   service_mobile_code: string;
+  beneficiary_id?: string;
 }
 
 type WizardStep = "form" | "otp";
+type BeneficiaryMode = "select" | "manual";
 
 export const CreateTransferDialog = ({
   open,
   onOpenChange,
   services,
+  beneficiaries = [],
   onCreateTransfer,
   isLoading = false,
 }: CreateTransferDialogProps) => {
   const { sendTransferOtp, isLoading: isSendingOtp } = useTransfersStore();
   const [currentStep, setCurrentStep] = React.useState<WizardStep>("form");
+  const [beneficiaryMode, setBeneficiaryMode] = React.useState<BeneficiaryMode>(
+    beneficiaries.length > 0 ? "select" : "manual"
+  );
   const [otp, setOtp] = React.useState("");
   const [isVerifying, setIsVerifying] = React.useState(false);
   const [isSendingOtpLocal, setIsSendingOtpLocal] = React.useState(false);
@@ -68,9 +88,38 @@ export const CreateTransferDialog = ({
       name: "",
       phone: "",
       service_mobile_code: "",
+      beneficiary_id: "",
     },
     mode: "onChange",
   });
+
+  // Update mode when beneficiaries change (only if mode becomes invalid)
+  React.useEffect(() => {
+    if (beneficiaries.length === 0 && beneficiaryMode === "select") {
+      setBeneficiaryMode("manual");
+    }
+  }, [beneficiaries.length, beneficiaryMode]);
+
+  // Handle beneficiary selection
+  const handleBeneficiaryChange = (beneficiaryId: string) => {
+    const beneficiary = beneficiaries.find((b) => b.id === beneficiaryId);
+    if (beneficiary) {
+      form.setValue("beneficiary_id", beneficiaryId);
+      form.setValue("name", beneficiary.name);
+      form.setValue("phone", beneficiary.phone);
+    }
+  };
+
+  // Reset form when mode changes
+  React.useEffect(() => {
+    if (beneficiaryMode === "select") {
+      form.setValue("name", "");
+      form.setValue("phone", "");
+      form.setValue("beneficiary_id", "");
+    } else {
+      form.setValue("beneficiary_id", "");
+    }
+  }, [beneficiaryMode, form]);
 
   const handleFormSubmit = async (data: TransferFormData) => {
     if (!data.service_mobile_code) {
@@ -80,6 +129,32 @@ export const CreateTransferDialog = ({
       });
       return;
     }
+
+    if (beneficiaryMode === "select" && !data.beneficiary_id) {
+      form.setError("beneficiary_id", {
+        type: "required",
+        message: "Please select a beneficiary",
+      });
+      return;
+    }
+
+    if (beneficiaryMode === "manual") {
+      if (!data.name) {
+        form.setError("name", {
+          type: "required",
+          message: "Recipient name is required",
+        });
+        return;
+      }
+      if (!data.phone) {
+        form.setError("phone", {
+          type: "required",
+          message: "Phone number is required",
+        });
+        return;
+      }
+    }
+
     setIsSendingOtpLocal(true);
     try {
       await sendTransferOtp();
@@ -126,6 +201,7 @@ export const CreateTransferDialog = ({
     setCurrentStep("form");
     setOtp("");
     setTransferData(null);
+    setBeneficiaryMode(beneficiaries.length > 0 ? "select" : "manual");
     form.reset();
     onOpenChange(false);
   };
@@ -172,39 +248,157 @@ export const CreateTransferDialog = ({
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="name">Recipient Name *</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="Enter recipient name"
-                {...form.register("name", {
-                  required: "Recipient name is required",
-                })}
-              />
-              {form.formState.errors.name && (
-                <p className="text-sm text-destructive">
-                  {form.formState.errors.name.message}
-                </p>
-              )}
-            </div>
+            {/* Beneficiary Selection Mode */}
+            {beneficiaries.length > 0 && (
+              <div className="space-y-3 rounded-lg border p-4">
+                <Label>Beneficiary *</Label>
+                <RadioGroup
+                  value={beneficiaryMode}
+                  onValueChange={(value) => setBeneficiaryMode(value as BeneficiaryMode)}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="select" id="select-beneficiary" />
+                    <Label htmlFor="select-beneficiary" className="font-normal cursor-pointer">
+                      Select from list
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="manual" id="manual-beneficiary" />
+                    <Label htmlFor="manual-beneficiary" className="font-normal cursor-pointer">
+                      Enter manually
+                    </Label>
+                  </div>
+                </RadioGroup>
 
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number *</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="Enter phone number"
-                {...form.register("phone", {
-                  required: "Phone number is required",
-                })}
-              />
-              {form.formState.errors.phone && (
-                <p className="text-sm text-destructive">
-                  {form.formState.errors.phone.message}
-                </p>
-              )}
-            </div>
+                {beneficiaryMode === "select" ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="beneficiary_id">Select Beneficiary *</Label>
+                    <Select
+                      value={form.watch("beneficiary_id")}
+                      onValueChange={handleBeneficiaryChange}
+                      disabled={beneficiaries.length === 0}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            beneficiaries.length === 0
+                              ? "No beneficiaries available"
+                              : "Select a beneficiary"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {beneficiaries.length === 0 ? (
+                          <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                            No beneficiaries available
+                          </div>
+                        ) : (
+                          beneficiaries.map((beneficiary) => (
+                            <SelectItem key={beneficiary.id} value={beneficiary.id}>
+                              {beneficiary.name} - {beneficiary.code_phone && `${beneficiary.code_phone} `}
+                              {beneficiary.phone}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {form.formState.errors.beneficiary_id && (
+                      <p className="text-sm text-destructive">
+                        {form.formState.errors.beneficiary_id.message}
+                      </p>
+                    )}
+                    {form.watch("beneficiary_id") && (
+                      <div className="rounded-md bg-muted/50 p-3 text-sm">
+                        <div className="font-medium">
+                          {beneficiaries.find((b) => b.id === form.watch("beneficiary_id"))?.name}
+                        </div>
+                        <div className="text-muted-foreground">
+                          {beneficiaries.find((b) => b.id === form.watch("beneficiary_id"))?.code_phone && 
+                            `${beneficiaries.find((b) => b.id === form.watch("beneficiary_id"))?.code_phone} `}
+                          {beneficiaries.find((b) => b.id === form.watch("beneficiary_id"))?.phone}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Recipient Name *</Label>
+                      <Input
+                        id="name"
+                        type="text"
+                        placeholder="Enter recipient name"
+                        {...form.register("name", {
+                          required: beneficiaryMode === "manual" ? "Recipient name is required" : false,
+                        })}
+                      />
+                      {form.formState.errors.name && (
+                        <p className="text-sm text-destructive">
+                          {form.formState.errors.name.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number *</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="Enter phone number"
+                        {...form.register("phone", {
+                          required: beneficiaryMode === "manual" ? "Phone number is required" : false,
+                        })}
+                      />
+                      {form.formState.errors.phone && (
+                        <p className="text-sm text-destructive">
+                          {form.formState.errors.phone.message}
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Manual Entry (when no beneficiaries or manual mode selected) */}
+            {beneficiaries.length === 0 && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Recipient Name *</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Enter recipient name"
+                    {...form.register("name", {
+                      required: "Recipient name is required",
+                    })}
+                  />
+                  {form.formState.errors.name && (
+                    <p className="text-sm text-destructive">
+                      {form.formState.errors.name.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number *</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="Enter phone number"
+                    {...form.register("phone", {
+                      required: "Phone number is required",
+                    })}
+                  />
+                  {form.formState.errors.phone && (
+                    <p className="text-sm text-destructive">
+                      {form.formState.errors.phone.message}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="service_mobile_code">Mobile Service *</Label>

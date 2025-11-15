@@ -4,6 +4,8 @@ import { useEffect, Suspense, useState } from "react";
 import { useTransfersStore } from "@/stores/transfers.store";
 import { useAuthStore } from "@/stores/auth.store";
 import { useMobileServicesStore } from "@/stores/mobile-services.store";
+import { useBeneficiariesStore } from "@/stores/beneficiaries.store";
+import { useOrganisationsStore } from "@/stores/organisations.store";
 import { TransfersTable } from "@/components/shared/transfers-table";
 import { TransferDetailsSheet } from "@/components/shared/transfer-details-sheet";
 import { CreateTransferDialog } from "@/components/shared/create-transfer-dialog";
@@ -45,6 +47,8 @@ export default function TransfersPage() {
   const { transfers, isLoading, pagination, fetchTransfers, initializeTransfer } = useTransfersStore();
   const { isAuthenticated } = useAuthStore();
   const { services, fetchServices } = useMobileServicesStore();
+  const { beneficiaries, fetchMyBeneficiaries, fetchBeneficiariesByOrganisation } = useBeneficiariesStore();
+  const { organisation } = useOrganisationsStore();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -54,8 +58,14 @@ export default function TransfersPage() {
     if (isAuthenticated) {
       fetchTransfers({ page: 1, size: 10 });
       fetchServices();
+      // Fetch beneficiaries
+      if (organisation?.id) {
+        fetchBeneficiariesByOrganisation(organisation.id, { page: 1, size: 100 });
+      } else {
+        fetchMyBeneficiaries({ page: 1, size: 100 });
+      }
     }
-  }, [isAuthenticated, fetchTransfers, fetchServices]);
+  }, [isAuthenticated, organisation?.id, fetchTransfers, fetchServices, fetchMyBeneficiaries, fetchBeneficiariesByOrganisation]);
 
   const handleCreateTransfer = async (data: CreateTransfertDto) => {
     setIsCreating(true);
@@ -181,6 +191,7 @@ export default function TransfersPage() {
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
         services={services}
+        beneficiaries={Array.isArray(beneficiaries) ? beneficiaries : []}
         onCreateTransfer={handleCreateTransfer}
         isLoading={isCreating}
       />
